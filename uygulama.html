@@ -307,6 +307,9 @@ try{
       var statEl = document.querySelector('.stat.g .sn');
       if(statEl) statEl.textContent = data.toplamStok;
       render();
+      if(document.getElementById('pg-cek') && document.getElementById('pg-cek').classList.contains('a')){
+        renderCek();
+      }
     }
   });
 }catch(e){console.log('Firebase stok dinleme hatasi:',e);}
@@ -427,7 +430,7 @@ function excelIsle(rows){
     db.ref('stokVerisi').set({D:D2, G:G2, toplamStok:toplamStok, guncelleme:new Date().toLocaleString('tr-TR')});
   }catch(e){console.log('Firebase stok yazma hatasi:',e);}
 
-  kaydet();render();
+  kaydet();render();renderCek();
   toast('✅ Stok guncellendi! '+Object.keys(G2).length+' urun, '+toplamStok+' adet','ok');
 }
 function renderCek(){
