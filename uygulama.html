@@ -163,10 +163,6 @@ body.light .kmodal-ipucu{color:#888}
     <input type="file" id="excel-input" accept=".xlsx,.xls" style="display:none" onchange="excelYukle(this)">
     <button class="kamera-btn" style="background:linear-gradient(135deg,#059669,#047857);margin-top:8px" onclick="document.getElementById('excel-input').click()">📊 STOK GUNCELLE (EXCEL)</button>
     <input type="file" id="ios-capture" accept="image/*" capture="environment" style="display:none" onchange="iosBarkodOku(this)">
-    <div class="sinir-row">
-      <label>🏷️ Firsat siniri (adet):</label>
-      <input type="text" id="lim" value="3" inputmode="numeric" maxlength="2" onchange="updateLim()">
-    </div>
   </div>
   <div class="stats">
     <div class="stat g"><div class="sn">23521</div><div class="sl">Magaza Stok</div></div>
@@ -472,7 +468,7 @@ var stream=null;var detector=null;var animFrame=null;var taramaAktif=false;
 var codeReader=null;var audioCtx=null;
 
 try{var sv=localStorage.getItem('C');if(sv)C=JSON.parse(sv);}catch(e){}
-try{var lv=localStorage.getItem('LIM');if(lv){LIM=parseInt(lv);document.getElementById('lim').value=LIM;}}catch(e){}
+try{var lv=localStorage.getItem('LIM');if(lv){LIM=parseInt(lv);}}catch(e){}
 
 document.getElementById('bi').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();ekle();}});
 document.getElementById('bi-cek').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();ekleCekSekmesi();}});
