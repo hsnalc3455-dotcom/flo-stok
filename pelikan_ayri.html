@@ -365,8 +365,9 @@ function excelIsle(rows){
     if(!generic) return;
     // Harici kelime/marka filtresi
     if(haricMi(marka, model)) return;
+    var urunGrubu = String(row['Ürün Grubu']||'').trim().toUpperCase();
     D2[ean] = generic;
-    if(!G2[generic]) G2[generic] = {marka:marka, ad:model, bedenler:{}};
+    if(!G2[generic]) G2[generic] = {marka:marka, ad:model, bedenler:{}, kat:urunGrubu};
     if(!G2[generic].bedenler[beden] || stok > G2[generic].bedenler[beden].stok){
       G2[generic].bedenler[beden] = {beden:beden, stok:stok, ean:ean};
     }
@@ -401,7 +402,7 @@ function excelIsle(rows){
           var fark = yeniStok - eskiStok;
           if(fark===0) return;
           var info = yeniInfo || eskiInfo;
-          yeniFark.push({generic:g, marka:info.marka, ad:info.ad, eski:eskiStok, yeni:yeniStok, fark:fark, kategori:'TUMU', tip:'KUTULU'});
+          yeniFark.push({generic:g, marka:info.marka, ad:info.ad, eski:eskiStok, yeni:yeniStok, fark:fark, kategori:(info.kat||'TUMU'), tip:'KUTULU'});
         });
         yeniFark.sort(function(a,b){return a.fark-b.fark;});
         FARK = yeniFark;
