@@ -384,9 +384,36 @@ function excelIsle(rows){
   C = {};
   document.querySelector('.stat.g .sn').textContent = toplamStok;
 
-  // Firebase'e de yaz (ortak veri)
+  // Onceki veriyi Firebase'den oku, karsilastirma yap, sonra yeni veriyi yaz
   try{
-    db.ref('stokVerisiPelikan').set({D:D2, G:G2, toplamStok:toplamStok, guncelleme:new Date().toLocaleString('tr-TR')});
+    db.ref('stokVerisiPelikan').once('value', function(snapshot){
+      var eskiData = snapshot.val();
+      if(eskiData && eskiData.G){
+        var yeniFark = [];
+        var tumGenericler = {};
+        Object.keys(eskiData.G).forEach(function(g){ tumGenericler[g]=true; });
+        Object.keys(G2).forEach(function(g){ tumGenericler[g]=true; });
+        Object.keys(tumGenericler).forEach(function(g){
+          var eskiInfo = eskiData.G[g];
+          var yeniInfo = G2[g];
+          var eskiStok = eskiInfo ? eskiInfo.bedenler.reduce(function(s,b){return s+(b.stok>0?b.stok:0);},0) : 0;
+          var yeniStok = yeniInfo ? yeniInfo.bedenler.reduce(function(s,b){return s+(b.stok>0?b.stok:0);},0) : 0;
+          var fark = yeniStok - eskiStok;
+          if(fark===0) return;
+          var info = yeniInfo || eskiInfo;
+          yeniFark.push({generic:g, marka:info.marka, ad:info.ad, eski:eskiStok, yeni:yeniStok, fark:fark, kategori:'TUMU', tip:'KUTULU'});
+        });
+        yeniFark.sort(function(a,b){return a.fark-b.fark;});
+        FARK = yeniFark;
+        try{localStorage.setItem('FARK_CACHE', JSON.stringify(FARK));}catch(e){}
+        var azalan = yeniFark.filter(function(d){return d.fark<0;}).length;
+        var artan = yeniFark.filter(function(d){return d.fark>0;}).length;
+        toast('📊 Karsilastirma: '+azalan+' azalan, '+artan+' artan urun','ok');
+        renderDegisim();
+      }
+      // Yeni veriyi Firebase'e yaz
+      db.ref('stokVerisiPelikan').set({D:D2, G:G2, toplamStok:toplamStok, guncelleme:new Date().toLocaleString('tr-TR')});
+    });
   }catch(e){console.log('Firebase stok yazma hatasi:',e);}
 
   kaydet();render();
