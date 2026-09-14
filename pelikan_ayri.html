@@ -453,7 +453,6 @@ try{var sv=localStorage.getItem('C');if(sv)C=JSON.parse(sv);}catch(e){}
 try{var lv=localStorage.getItem('LIM');if(lv){LIM=parseInt(lv);}}catch(e){}
 
 document.getElementById('bi').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();ekle();}});
-document.getElementById('bi-cek').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();ekleCekSekmesi();}});
 
 function playSound(firsat){
   try{
