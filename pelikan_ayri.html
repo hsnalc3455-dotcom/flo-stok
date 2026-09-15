@@ -225,6 +225,17 @@ body.light .kmodal-ipucu{color:#888}
       </div>
     </div>
     <div class="tablo-wrap" style="margin-top:14px"><table class="tablo"><thead><tr><th>Tarih</th><th>Stok</th><th>Azalan</th><th>Artan</th></tr></thead><tbody id="trend-liste"></tbody></table></div>
+
+    <div style="margin-top:20px;background:#6d28d9;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;padding:10px 16px;border-radius:12px;letter-spacing:1px">🏆 7 GUNDE EN COK SATANLAR</div>
+    <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+      <button class="ecs-kat-btn a" onclick="ecsKatSec('TUM',this)" style="flex:1;min-width:70px;padding:10px;border-radius:12px;border:2px solid #8b5cf6;background:#8b5cf6;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">TUMU</button>
+      <button class="ecs-kat-btn" onclick="ecsKatSec('KADIN',this)" style="flex:1;min-width:70px;padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">KADIN</button>
+      <button class="ecs-kat-btn" onclick="ecsKatSec('ERKEK',this)" style="flex:1;min-width:70px;padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">ERKEK</button>
+      <button class="ecs-kat-btn" onclick="ecsKatSec('COCUK',this)" style="flex:1;min-width:70px;padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">COCUK</button>
+      <button class="ecs-kat-btn" onclick="ecsKatSec('AKTIFSPOR',this)" style="flex:1;min-width:70px;padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:14px;cursor:pointer">AKTIF SPOR</button>
+    </div>
+    <div id="ecs-liste"></div>
+    <button class="kamera-btn" style="background:linear-gradient(135deg,#16a34a,#15803d);margin-top:12px" onclick="ecsExcelIndir()">📥 HAFTALIK RAPORU EXCEL OLARAK INDIR</button>
   </div>
 </div>
 <div class="kmodal" id="kmodal">
@@ -330,6 +341,93 @@ function renderTrend(){
       trendTablo();
     });
   }catch(e){console.log('Trend yukleme hatasi:',e);}
+  renderEnCokSatan();
+}
+var EN_COK_SATAN_HAM = [];
+var ECS_KAT_SECILI = 'TUM';
+function renderEnCokSatan(){
+  try{
+    var bugun = new Date();
+    var yediGunOnce = new Date(bugun.getTime() - 7*24*60*60*1000);
+    db.ref('satisGunluguPelikan').once('value', function(snapshot){
+      var data = snapshot.val();
+      if(!data){ EN_COK_SATAN_HAM = []; ecsRender(); return; }
+      var toplam = {};
+      Object.keys(data).forEach(function(tarihKey){
+        var tarihObj = new Date(tarihKey);
+        if(tarihObj < yediGunOnce) return;
+        var gunlukSatislar = data[tarihKey];
+        if(!gunlukSatislar) return;
+        Object.values(gunlukSatislar).forEach(function(s){
+          if(!toplam[s.generic]){
+            toplam[s.generic] = {marka:s.marka, ad:s.ad, kategori:s.kategori, adet:0};
+          }
+          toplam[s.generic].adet += s.adet;
+        });
+      });
+      EN_COK_SATAN_HAM = Object.values(toplam).sort(function(a,b){return b.adet-a.adet;});
+      ecsRender();
+    });
+  }catch(e){console.log('En cok satan hatasi:',e);}
+}
+function ecsKatSec(kat, el){
+  ECS_KAT_SECILI = kat;
+  document.querySelectorAll('.ecs-kat-btn').forEach(function(b){
+    b.classList.remove('a');
+    b.style.background='var(--surface)';b.style.color='var(--text)';b.style.borderColor='var(--border)';
+  });
+  el.classList.add('a');
+  el.style.background='#8b5cf6';el.style.color='#fff';el.style.borderColor='#8b5cf6';
+  ecsRender();
+}
+function ecsRender(){
+  var liste = ECS_KAT_SECILI==='TUM' ? EN_COK_SATAN_HAM : EN_COK_SATAN_HAM.filter(function(d){return d.kategori===ECS_KAT_SECILI;});
+  liste = liste.slice(0,15);
+  var html = '';
+  liste.forEach(function(d,i){
+    html += '<div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px"><div style="font-family:\'Bebas Neue\',sans-serif;font-size:20px;color:#8b5cf6;min-width:24px">'+(i+1)+'</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+d.marka+' '+d.ad+'</div></div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:22px;color:#16a34a">'+d.adet+'</div></div>';
+  });
+  if(!liste.length) html = '<div class="empty"><span>🏆</span><p>Henuz yeterli satis verisi yok</p></div>';
+  document.getElementById('ecs-liste').innerHTML = html;
+}
+function ecsExcelIndir(){
+  if(!EN_COK_SATAN_HAM.length){ toast('⚠️ Henuz veri yok','wn'); return; }
+  var kategoriler = ['KADIN','ERKEK','COCUK','AKTIFSPOR'];
+  var wb = XLSX.utils.book_new();
+  var bugun = new Date().toLocaleDateString('tr-TR');
+
+  kategoriler.forEach(function(kat){
+    var veri = EN_COK_SATAN_HAM.filter(function(d){return d.kategori===kat;});
+    var wsData = [['SIRA','MARKA','MODEL','SATILAN ADET']];
+    veri.forEach(function(d,i){
+      wsData.push([i+1, d.marka, d.ad, d.adet]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:6},{wch:18},{wch:35},{wch:14}];
+    // Baslik satiri stil (turuncu)
+    var headerCells = ['A1','B1','C1','D1'];
+    headerCells.forEach(function(cell){
+      if(!ws[cell]) return;
+      ws[cell].s = {
+        fill:{fgColor:{rgb:'FF6000'}},
+        font:{bold:true, color:{rgb:'FFFFFF'}},
+        alignment:{horizontal:'center'}
+      };
+    });
+    XLSX.utils.book_append_sheet(wb, ws, kat);
+  });
+
+  // Tumu sekmesi
+  var wsDataTumu = [['SIRA','KATEGORI','MARKA','MODEL','SATILAN ADET']];
+  EN_COK_SATAN_HAM.forEach(function(d,i){
+    wsDataTumu.push([i+1, d.kategori, d.marka, d.ad, d.adet]);
+  });
+  var wsTumu = XLSX.utils.aoa_to_sheet(wsDataTumu);
+  wsTumu['!cols'] = [{wch:6},{wch:12},{wch:18},{wch:35},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsTumu, 'TUMU');
+
+  XLSX.writeFile(wb, 'Haftalik_En_Cok_Satan_'+bugun.replace(/\./g,'-')+'.xlsx');
+  toast('📥 Rapor indirildi!','ok');
 }
 function trendTablo(){
   var html = '';
@@ -498,6 +596,14 @@ function excelIsle(rows){
         FARK = yeniFark;
         try{localStorage.setItem('FARK_CACHE', JSON.stringify(FARK));}catch(e){}
         try{db.ref('farkVerisiPelikan').set(yeniFark);}catch(e){}
+        // Satis gunlugu: her azalan urunu tarihli olarak biriktir (7 gunluk en cok satan icin)
+        try{
+          var bugunKeySatis = new Date().toISOString().slice(0,10);
+          var satislar = yeniFark.filter(function(d){return d.fark<0;}).map(function(d){
+            return {generic:d.generic, marka:d.marka, ad:d.ad, kategori:d.kategori, adet:Math.abs(d.fark)};
+          });
+          db.ref('satisGunluguPelikan/'+bugunKeySatis).set(satislar);
+        }catch(e){}
         var azalan = yeniFark.filter(function(d){return d.fark<0;}).length;
         var artan = yeniFark.filter(function(d){return d.fark>0;}).length;
         toast('📊 Karsilastirma: '+azalan+' azalan, '+artan+' artan urun','ok');
