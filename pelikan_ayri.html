@@ -291,6 +291,14 @@ try{
       render();
     }
   });
+  db.ref('farkVerisiPelikan').on('value', function(snapshot){
+    var data = snapshot.val();
+    if(data){
+      FARK = data;
+      try{localStorage.setItem('FARK_CACHE', JSON.stringify(FARK));}catch(e){}
+      renderDegisim();
+    }
+  });
 }catch(e){console.log('Firebase stok dinleme hatasi:',e);}
 function okutulanToggle(){
   var el = document.getElementById('verilen-kartlar');
@@ -407,6 +415,7 @@ function excelIsle(rows){
         yeniFark.sort(function(a,b){return a.fark-b.fark;});
         FARK = yeniFark;
         try{localStorage.setItem('FARK_CACHE', JSON.stringify(FARK));}catch(e){}
+        try{db.ref('farkVerisiPelikan').set(yeniFark);}catch(e){}
         var azalan = yeniFark.filter(function(d){return d.fark<0;}).length;
         var artan = yeniFark.filter(function(d){return d.fark>0;}).length;
         toast('📊 Karsilastirma: '+azalan+' azalan, '+artan+' artan urun','ok');
