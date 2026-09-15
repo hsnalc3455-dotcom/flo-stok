@@ -151,6 +151,7 @@ body.light .kmodal-ipucu{color:#888}
   <div class="tab" id="tab-firsat" onclick="goTab('firsat',this)">🏷️ FIRSAT</div>
   <div class="tab" id="tab-degisim" onclick="goTab('degisim',this)">📊 STOK TAKIP</div>
   <div class="tab" id="tab-hareketsiz" onclick="goTab('hareketsiz',this)" style="color:var(--danger)">⚠️ HAREKETSIZ</div>
+  <div class="tab" id="tab-trend" onclick="goTab('trend',this)" style="color:#8b5cf6">📈 TREND</div>
 </div>
 <div class="pg a" id="pg-tum">
   <div class="ia">
@@ -206,6 +207,24 @@ body.light .kmodal-ipucu{color:#888}
     </div>
     <div class="stat r" style="margin-bottom:14px"><div class="sn" id="hz-sayi">0</div><div class="sl">Hareketsiz Urun</div></div>
     <div class="tablo-wrap"><table class="tablo"><thead><tr><th>Malzeme Kodu</th><th>Model</th><th>Stok</th><th>Durum</th></tr></thead><tbody id="hareketsiz-liste"></tbody></table></div>
+  </div>
+</div>
+<div class="pg" id="pg-trend">
+  <div class="firsat-hero" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)"><div style="font-size:64px;margin-bottom:8px">📈</div><h2>STOK TRENDI</h2><p>Gunluk stok ve hareket gecmisi</p></div>
+  <div style="padding:14px">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:700">TOPLAM STOK (Son Kayitlar)</div>
+      <canvas id="trendCanvasStok" width="340" height="160" style="width:100%;max-width:100%"></canvas>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;font-weight:700">AZALAN / ARTAN URUN SAYISI</div>
+      <canvas id="trendCanvasHareket" width="340" height="160" style="width:100%;max-width:100%"></canvas>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:11px">
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#dc2626;border-radius:2px"></div>Azalan</div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:10px;height:10px;background:#16a34a;border-radius:2px"></div>Artan</div>
+      </div>
+    </div>
+    <div class="tablo-wrap" style="margin-top:14px"><table class="tablo"><thead><tr><th>Tarih</th><th>Stok</th><th>Azalan</th><th>Artan</th></tr></thead><tbody id="trend-liste"></tbody></table></div>
   </div>
 </div>
 <div class="kmodal" id="kmodal">
@@ -300,6 +319,69 @@ try{
     }
   });
 }catch(e){console.log('Firebase stok dinleme hatasi:',e);}
+var TREND_VERISI = [];
+function renderTrend(){
+  try{
+    db.ref('trendGecmisiPelikan').limitToLast(30).once('value', function(snapshot){
+      var data = snapshot.val();
+      if(!data) return;
+      TREND_VERISI = Object.values(data).sort(function(a,b){return a.tarih.localeCompare(b.tarih);});
+      trendCiz();
+      trendTablo();
+    });
+  }catch(e){console.log('Trend yukleme hatasi:',e);}
+}
+function trendTablo(){
+  var html = '';
+  TREND_VERISI.slice().reverse().forEach(function(d){
+    html += '<tr><td>'+d.tarih+'</td><td style="text-align:center">'+d.toplamStok+'</td><td style="text-align:center;color:#dc2626">'+d.azalan+'</td><td style="text-align:center;color:#16a34a">'+d.artan+'</td></tr>';
+  });
+  if(!TREND_VERISI.length) html = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Henuz trend verisi yok</td></tr>';
+  document.getElementById('trend-liste').innerHTML = html;
+}
+function trendCiz(){
+  if(!TREND_VERISI.length) return;
+  // Stok cizgi grafigi
+  var c1 = document.getElementById('trendCanvasStok');
+  var ctx1 = c1.getContext('2d');
+  ctx1.clearRect(0,0,c1.width,c1.height);
+  var stoklar = TREND_VERISI.map(function(d){return d.toplamStok;});
+  var maxS = Math.max.apply(null, stoklar)*1.1;
+  var minS = Math.min.apply(null, stoklar)*0.9;
+  var w1 = c1.width, h1 = c1.height, pad1 = 20;
+  ctx1.strokeStyle = '#8b5cf6';
+  ctx1.lineWidth = 2;
+  ctx1.beginPath();
+  stoklar.forEach(function(v,i){
+    var x = pad1 + (w1-2*pad1) * (i/(Math.max(stoklar.length-1,1)));
+    var y = h1 - pad1 - (h1-2*pad1) * ((v-minS)/(maxS-minS||1));
+    if(i===0) ctx1.moveTo(x,y); else ctx1.lineTo(x,y);
+  });
+  ctx1.stroke();
+  stoklar.forEach(function(v,i){
+    var x = pad1 + (w1-2*pad1) * (i/(Math.max(stoklar.length-1,1)));
+    var y = h1 - pad1 - (h1-2*pad1) * ((v-minS)/(maxS-minS||1));
+    ctx1.fillStyle = '#8b5cf6';
+    ctx1.beginPath();ctx1.arc(x,y,3,0,7);ctx1.fill();
+  });
+
+  // Azalan/Artan bar grafik
+  var c2 = document.getElementById('trendCanvasHareket');
+  var ctx2 = c2.getContext('2d');
+  ctx2.clearRect(0,0,c2.width,c2.height);
+  var w2 = c2.width, h2 = c2.height, pad2 = 20;
+  var maxH = Math.max.apply(null, TREND_VERISI.map(function(d){return Math.max(d.azalan,d.artan);}))*1.2 || 1;
+  var barW = (w2-2*pad2) / TREND_VERISI.length / 2.5;
+  TREND_VERISI.forEach(function(d,i){
+    var xBase = pad2 + (w2-2*pad2) * (i/(Math.max(TREND_VERISI.length-1,1)));
+    var hAzalan = (h2-2*pad2) * (d.azalan/maxH);
+    var hArtan = (h2-2*pad2) * (d.artan/maxH);
+    ctx2.fillStyle = '#dc2626';
+    ctx2.fillRect(xBase-barW-1, h2-pad2-hAzalan, barW, hAzalan);
+    ctx2.fillStyle = '#16a34a';
+    ctx2.fillRect(xBase+1, h2-pad2-hArtan, barW, hArtan);
+  });
+}
 function okutulanToggle(){
   var el = document.getElementById('verilen-kartlar');
   var ok = document.getElementById('okutulan-ok');
@@ -420,6 +502,17 @@ function excelIsle(rows){
         var artan = yeniFark.filter(function(d){return d.fark>0;}).length;
         toast('📊 Karsilastirma: '+azalan+' azalan, '+artan+' artan urun','ok');
         renderDegisim();
+        // Gunluk ozet gecmisi kaydet (trend grafigi icin)
+        try{
+          var bugunKey = new Date().toISOString().slice(0,10);
+          db.ref('trendGecmisiPelikan/'+bugunKey).set({
+            tarih: bugunKey,
+            toplamStok: toplamStok,
+            azalan: azalan,
+            artan: artan,
+            urunSayisi: Object.keys(G2).length
+          });
+        }catch(e){}
       }
       // Yeni veriyi Firebase'e yaz
       db.ref('stokVerisiPelikan').set({D:D2, G:G2, toplamStok:toplamStok, guncelleme:new Date().toLocaleString('tr-TR')});
@@ -727,6 +820,7 @@ function goTab(id,el){
   if(id==='tum')document.getElementById('bi').focus();
   if(id==='degisim')renderDegisim();
   if(id==='hareketsiz')renderHareketsiz();
+  if(id==='trend')renderTrend();
 }
 var html5QrCode=null;
 var KAMERA_KAYNAK = 'ana';
