@@ -171,6 +171,9 @@ body.light .kmodal-ipucu{color:#888}
     <span id="baglanti-durum">🔴 Baglanti bekleniyor...</span>
     <span id="stok-tarih">Stok tarihi: yerel veri</span>
   </div>
+  <div style="padding:4px 14px;font-size:10px;color:var(--muted)">
+    <span id="teshis-satir">Veri kaynagi: dosya ici (Firebase henuz gelmedi) | EAN: -</span>
+  </div>
   <div class="list-wrap">
     <div id="liste"><div class="empty"><span>📦</span><p>Henuz urun eklenmedi</p></div></div>
     <button class="rb" onclick="resetAll()">🗑 Tumunu Sifirla</button>
@@ -300,6 +303,7 @@ try{
   });
   db.ref('stokVerisiPelikan').on('value', function(snapshot){
     var data = snapshot.val();
+    var tesEl = document.getElementById('teshis-satir');
     if(data && data.D && data.G){
       D = data.D;
       G = data.G;
@@ -311,7 +315,10 @@ try{
       if(statEl) statEl.textContent = data.toplamStok;
       var tarihEl = document.getElementById('stok-tarih');
       if(tarihEl) tarihEl.textContent = 'Stok: ' + (data.guncelleme || 'bilinmiyor');
+      if(tesEl) tesEl.textContent = 'Veri kaynagi: FIREBASE | EAN: ' + Object.keys(D).length + ' | Model: ' + Object.keys(G).length;
       render();
+    } else {
+      if(tesEl) tesEl.textContent = 'Veri kaynagi: dosya ici (Firebase bos/gelmedi) | EAN: ' + Object.keys(D).length;
     }
   });
   db.ref('farkVerisiPelikan').on('value', function(snapshot){
