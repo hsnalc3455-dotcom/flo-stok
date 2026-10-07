@@ -662,20 +662,30 @@ function excelIsle(rows){
         toast('❌ Diger cihazlara GONDERILEMEDI: ' + hataMetni(st),'wn');
         return;
       }
-      fbPut('stokMetaPelikan', {ts:yazTs, guncelleme:gunc, toplamStok:toplamStok}, function(st2){
-        if(st2<200 || st2>=300){ toast('❌ ' + hataMetni(st2),'wn'); return; }
-        durum('🟢 Bagli - yayinlandi');
-        toast('✅ Tum cihazlara gonderildi! ' + (eskiG ? azalan+' azalan, '+artan+' artan' : ''),'ok');
-      });
+      var isler = [];
+      function bekle(){ isler.push(1); }
+      var bekleyen = 0, hata = 0;
+      function bitir(st3){ bekleyen--; if(st3<200 || st3>=300) hata++; if(bekleyen>0) return;
+        if(hata){ toast('❌ Karsilastirma verisi yazilamadi','wn'); }
+        fbPut('stokMetaPelikan', {ts:yazTs, guncelleme:gunc, toplamStok:toplamStok}, function(st2){
+          if(st2<200 || st2>=300){ toast('❌ ' + hataMetni(st2),'wn'); return; }
+          durum('🟢 Bagli - yayinlandi');
+          toast('✅ Tum cihazlara gonderildi! ' + (eskiG ? azalan+' azalan, '+artan+' artan' : ''),'ok');
+        });
+      }
+      var yaz = [];
       if(eskiG){
-        fbPut('farkVerisiPelikan', yeniFark);
-        fbPut('hareketsizPelikan', hz);
+        yaz.push(['farkVerisiPelikan', yeniFark]);
+        yaz.push(['hareketsizPelikan', hz]);
         var satislar = yeniFark.filter(function(d){return d.fark<0;}).map(function(d){
           return {generic:d.generic, marka:d.marka, ad:d.ad, kategori:d.kategori, adet:Math.abs(d.fark)};
         });
-        fbPut('satisGunluguPelikan/'+bugunKey, satislar);
-        fbPut('trendGecmisiPelikan/'+bugunKey, {tarih:bugunKey, toplamStok:toplamStok, azalan:azalan, artan:artan, urunSayisi:Object.keys(G2).length});
+        yaz.push(['satisGunluguPelikan/'+bugunKey, satislar]);
+        yaz.push(['trendGecmisiPelikan/'+bugunKey, {tarih:bugunKey, toplamStok:toplamStok, azalan:azalan, artan:artan, urunSayisi:Object.keys(G2).length}]);
       }
+      bekleyen = yaz.length;
+      if(!bekleyen){ bekleyen = 1; bitir(200); return; }
+      for(var i=0;i<yaz.length;i++){ fbPut(yaz[i][0], yaz[i][1], bitir); }
     });
   }
   fbGet('stokVerisiPelikan', function(st, eski){
@@ -937,8 +947,8 @@ function goTab(id,el){
   document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('a');});
   document.getElementById('pg-'+id).classList.add('a');el.classList.add('a');
   if(id==='tum')document.getElementById('bi').focus();
-  if(id==='degisim')renderDegisim();
-  if(id==='hareketsiz')renderHareketsiz();
+  if(id==='degisim'){renderDegisim();farkCek();}
+  if(id==='hareketsiz'){renderHareketsiz();farkCek();}
   if(id==='trend')renderTrend();
 }
 var html5QrCode=null;
