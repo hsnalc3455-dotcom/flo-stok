@@ -232,6 +232,7 @@ body.light .kmodal-ipucu{color:#888}
       <button id="say-r" class="say-mod a" onclick="sayModSec('r')">🛍️ REYON</button>
       <button id="say-d" class="say-mod" onclick="sayModSec('d')">📦 DEPO</button>
     </div>
+    <label style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px;font-size:13px;font-weight:700"><input type="checkbox" id="say-sor" style="width:20px;height:20px"> Reyonda okutunca adedi sor</label>
     <div id="say-mod-yazi" style="text-align:center;font-weight:800;margin-bottom:10px">REYON sayiyorsun</div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="say-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="sayimEkle()">EKLE</button></div>
     <button class="kamera-btn" onclick="sayKameraAc()">📷 KAMERA ILE SAY</button>
@@ -820,6 +821,8 @@ function sayimEkle(kod){
   playSound(ses);
   if(titre && navigator.vibrate) navigator.vibrate(titre);
   sayGonder(); sayRender();
+  var sor = document.getElementById('say-sor');
+  if(SAY_MOD==='r' && sor && sor.checked && kod===undefined){ setTimeout(function(){ sayAdetGir(v); }, 60); }
 }
 function sayGeriAl(){
   var s = SAY_SON.pop();
@@ -834,6 +837,24 @@ function sayDuz(ean, delta){
   if(yeni<0){ toast('Bu cihazda dusurulecek okutma yok (baska cihaz okutmus olabilir)','wn'); return; }
   SAY_BEN[ean][SAY_MOD] = yeni;
   var b = eanBilgi(ean); if(b) SAY_ZAMAN[b.g] = new Date().getTime();
+  sayGonder(); sayRender();
+}
+function sayAdetGir(ean){
+  var b = eanBilgi(ean); if(!b) return;
+  var t = sayToplam(ean);
+  var kendi = (SAY_BEN[ean] && SAY_BEN[ean].r) ? SAY_BEN[ean].r : 0;
+  var digerleri = t.r - kendi;
+  var sistem = b.bed ? b.bed.stok : 0;
+  var ad = b.info.marka+' '+b.info.ad+' ('+(b.bed?b.bed.beden:'?')+')';
+  var cevap = prompt('REYONDA kac adet var?\n'+ad+'\nSistem stogu: '+sistem, String(t.r));
+  if(cevap===null || cevap==='') return;
+  var n = parseInt(cevap,10);
+  if(isNaN(n) || n<0){ toast('⚠️ Gecerli bir sayi yaz','wn'); return; }
+  if(!SAY_BEN[ean]) SAY_BEN[ean] = {r:0,d:0};
+  SAY_BEN[ean].r = Math.max(0, n - digerleri);
+  SAY_ZAMAN[b.g] = new Date().getTime();
+  var depoda = sistem - n;
+  toast('📝 Reyon: '+ad+' = '+n+' adet (Sistem '+sistem+')'+(depoda>0 ? ' → '+depoda+' adet depoda/eksik' : ''), 'ok');
   sayGonder(); sayRender();
 }
 function sayFiltre(f, el){
