@@ -146,7 +146,7 @@ body.light .kmodal-ipucu{color:#888}
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v11.10 SAYIM</div>
+        <div class="header-sub">PELIKAN v11.10-E (OKUTUNCA STOK KADAR)</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -232,6 +232,7 @@ body.light .kmodal-ipucu{color:#888}
       <button id="say-r" class="say-mod a" onclick="sayModSec('r')">🛍️ REYON</button>
       <button id="say-d" class="say-mod" onclick="sayModSec('d')">📦 DEPO</button>
     </div>
+    <label style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:6px;font-size:13px;font-weight:700"><input type="checkbox" id="say-oto" checked style="width:20px;height:20px"> Reyonda okutunca stok kadar yaz (ayni urunu tekrar okutursan sayilmaz)</label>
     <label style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px;font-size:13px;font-weight:700"><input type="checkbox" id="say-sor" style="width:20px;height:20px"> Reyonda okutunca adedi sor</label>
     <div id="say-mod-yazi" style="text-align:center;font-weight:800;margin-bottom:10px">REYON sayiyorsun</div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="say-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="sayimEkle()">EKLE</button></div>
@@ -791,7 +792,16 @@ function sayimEkle(kod){
   if(kod===undefined){ document.getElementById('say-bi').value=''; document.getElementById('say-bi').focus(); }
   if(!b){ toast('⚠️ Bu barkod stok listesinde yok','wn'); setTxt('kson','⚠️ Listede yok: '+v); return; }
   if(!SAY_BEN[v]) SAY_BEN[v] = {r:0,d:0};
-  SAY_BEN[v][SAY_MOD] += 1;
+  var otoKutu = document.getElementById('say-oto');
+  var oto = (SAY_MOD==='r' && otoKutu && otoKutu.checked);
+  var onceR = sayToplam(v).r;
+  var zatenVar = false;
+  if(oto){
+    if(onceR===0){ SAY_BEN[v].r = (b.bed ? Math.max(0,b.bed.stok) : 0) || 1; }
+    else { zatenVar = true; }
+  } else {
+    SAY_BEN[v][SAY_MOD] += 1;
+  }
   SAY_SON.push({ean:v, m:SAY_MOD});
   SAY_ZAMAN[b.g] = new Date().getTime();
   var t = sayToplam(v);
@@ -806,7 +816,7 @@ function sayimEkle(kod){
   var msg, tip, ses = false, titre = null;
   if(SAY_MOD==='r'){
     var depoda = sistem - t.r;
-    msg = stokYazi+'📝 Reyon kaydedildi: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem + (depoda>0 ? ' → '+depoda+' adet depoda olmali' : '') + ' | Modelin toplami: '+topl+' adet';
+    msg = stokYazi+(zatenVar ? '✔️ Zaten kayitli (duzeltmek icin kartta adede dokun): ' : '📝 Reyon kaydedildi: ')+ad+' | Reyonda '+t.r+' / Sistem '+sistem + (depoda>0 ? ' → '+depoda+' adet depoda olmali' : '') + ' | Modelin toplami: '+topl+' adet';
     tip = 'ok';
   } else if(modelR===0){
     msg = stokYazi+'ℹ️ REYONDA KAYIT YOK: '+ad+' (reyonda bu modeli okutmadin) | Modelin toplami: '+topl+' adet';
