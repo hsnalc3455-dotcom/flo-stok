@@ -801,19 +801,21 @@ function sayimEkle(kod){
   var modelR = 0;
   b.info.bedenler.forEach(function(x){ modelR += sayToplam(x.ean).r; });
   var onceki = sayilan - 1 - sistem;   // bu okutmadan once: (reyon+depo) - sistem
+  var topl = getToplam(b.g);
+  var stokYazi = '📦 STOKTA '+sistem+' ADET | ';
   var msg, tip, ses = false, titre = null;
   if(SAY_MOD==='r'){
     var depoda = sistem - t.r;
-    msg = '📝 Reyon kaydedildi: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem + (depoda>0 ? ' → '+depoda+' adet depoda olmali' : '');
+    msg = stokYazi+'📝 Reyon kaydedildi: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem + (depoda>0 ? ' → '+depoda+' adet depoda olmali' : '') + ' | Modelin toplami: '+topl+' adet';
     tip = 'ok';
   } else if(modelR===0){
-    msg = 'ℹ️ REYONDA KAYIT YOK: '+ad+' (reyonda bu modeli okutmadin)';
+    msg = stokYazi+'ℹ️ REYONDA KAYIT YOK: '+ad+' (reyonda bu modeli okutmadin) | Modelin toplami: '+topl+' adet';
     tip = 'wn';
   } else if(onceki<0){
-    msg = '📦 EKSIK AL! '+ad+' | Reyonda '+t.r+' / Sistem '+sistem+' → '+(-onceki)+' adet eksik' + (t.r===0 ? ' (bu beden reyonda yok)' : '');
+    msg = stokYazi+'📦 EKSIK AL! '+ad+' | Reyonda '+t.r+' / Sistem '+sistem+' → '+(-onceki)+' adet eksik' + (t.r===0 ? ' (bu beden reyonda yok)' : '') + ' | Modelin toplami: '+topl+' adet';
     tip = 'er'; ses = true; titre = [200,100,200,100,200];
   } else {
-    msg = '✋ ALMA, reyon tam: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem;
+    msg = stokYazi+'✋ ALMA, reyon tam: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem+' | Modelin toplami: '+topl+' adet';
     tip = 'wn2'; titre = [100];
   }
   toast(msg, tip);
@@ -846,7 +848,7 @@ function sayAdetGir(ean){
   var digerleri = t.r - kendi;
   var sistem = b.bed ? b.bed.stok : 0;
   var ad = b.info.marka+' '+b.info.ad+' ('+(b.bed?b.bed.beden:'?')+')';
-  var cevap = prompt('REYONDA kac adet var?\n'+ad+'\nSistem stogu: '+sistem, String(t.r));
+  var cevap = prompt('REYONDA kac adet var?\n'+ad+'\nSTOKTA '+sistem+' ADET GORUNUYOR', String(t.r>0 ? t.r : sistem));
   if(cevap===null || cevap==='') return;
   var n = parseInt(cevap,10);
   if(isNaN(n) || n<0){ toast('⚠️ Gecerli bir sayi yaz','wn'); return; }
@@ -923,7 +925,7 @@ function sayRender(){
     var reyonMu = (SAY_MOD==='r');
     var renk = reyonMu ? '#2563eb' : (m.durum==='EKSIK' ? '#ef4444' : (m.durum==='FAZLA' ? '#9333ea' : (m.durum==='KAYITSIZ' ? '#9ca3af' : '#22c55e')));
     var etiket = reyonMu ? ('REYON '+m.r+' adet') : ((SAY_FILTRE==='ESLESEN' && m.eslesen>0) ? ('ALINDI '+m.eslesen) : m.durum==='EKSIK' ? ('EKSIK AL '+m.eksik) : (m.durum==='FAZLA' ? ('FAZLA '+m.fazla) : (m.durum==='KAYITSIZ' ? 'REYONDA KAYIT YOK' : 'TAMAM')));
-    html += '<div class="say-kart" style="border-left:6px solid '+renk+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-size:11px;color:var(--muted);font-weight:700">'+m.info.marka+'</div><div style="font-size:15px;font-weight:700">'+m.info.ad+'</div><div style="font-size:11px;color:var(--muted)">'+m.g+'</div></div><div style="background:'+renk+';color:#fff;font-size:13px;font-weight:800;padding:6px 10px;border-radius:10px;white-space:nowrap">'+etiket+'</div></div>';
+    html += '<div class="say-kart" style="border-left:6px solid '+renk+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-size:11px;color:var(--muted);font-weight:700">'+m.info.marka+'</div><div style="font-size:15px;font-weight:700">'+m.info.ad+'</div><div style="font-size:11px;color:var(--muted)">'+m.g+' · Modelin toplam stogu: <b>'+getToplam(m.g)+' adet</b></div></div><div style="background:'+renk+';color:#fff;font-size:13px;font-weight:800;padding:6px 10px;border-radius:10px;white-space:nowrap">'+etiket+'</div></div>';
     if(reyonMu){
       html += '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px"><tr style="color:var(--muted);font-size:11px"><td>Beden</td><td align="center">Reyonda</td><td align="center">Sistem</td><td align="right">Duzelt</td></tr>';
       m.satirlar.forEach(function(s){
