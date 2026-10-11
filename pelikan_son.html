@@ -136,6 +136,7 @@ body.light .kmodal-ipucu{color:#888}
 .say-f{padding:8px 14px;border-radius:20px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;cursor:pointer}
 .say-f.a{background:var(--text);color:var(--bg);border-color:var(--text)}
 .say-kart{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px}
+.say-pm{width:34px;height:30px;margin-left:4px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px;font-weight:800;cursor:pointer}
 </style>
 </head>
 <body>
@@ -242,16 +243,16 @@ body.light .kmodal-ipucu{color:#888}
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <div class="stat" style="flex:1"><div class="sn" id="say-r-n">0</div><div class="sl">Reyon</div></div>
       <div class="stat" style="flex:1"><div class="sn" id="say-d-n">0</div><div class="sl">Depo</div></div>
-      <div class="stat r" style="flex:1"><div class="sn" id="say-e-n">0</div><div class="sl">Eksik</div></div>
-      <div class="stat" style="flex:1"><div class="sn" id="say-m-n" style="color:#22c55e">0</div><div class="sl">Eslesen</div></div>
+      <div class="stat r" style="flex:1"><div class="sn" id="say-e-n">0</div><div class="sl">Eksik al</div></div>
+      <div class="stat" style="flex:1"><div class="sn" id="say-m-n" style="color:#22c55e">0</div><div class="sl">Alinan</div></div>
       <div class="stat" style="flex:1"><div class="sn" id="say-f-n" style="color:#9333ea">0</div><div class="sl">Fazla</div></div>
     </div>
     <div id="say-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Sayim hazir</div>
     <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
       <button class="say-f a" data-f="TUM" onclick="sayFiltre('TUM',this)">Hepsi</button>
-      <button class="say-f" data-f="EKSIK" onclick="sayFiltre('EKSIK',this)">Eksik</button>
+      <button class="say-f" data-f="EKSIK" onclick="sayFiltre('EKSIK',this)">Eksik (al)</button>
       <button class="say-f" data-f="FAZLA" onclick="sayFiltre('FAZLA',this)">Fazla</button>
-      <button class="say-f" data-f="ESLESEN" onclick="sayFiltre('ESLESEN',this)">Depodan eslesen</button>
+      <button class="say-f" data-f="ESLESEN" onclick="sayFiltre('ESLESEN',this)">Depodan alinan</button>
       <button class="say-f" data-f="TAMAM" onclick="sayFiltre('TAMAM',this)">Tamam</button>
     </div>
     <div id="say-liste"></div>
@@ -741,7 +742,8 @@ var SAY_TUR = '0';
 var SAY_MOD = 'r';            // r = reyon, d = depo
 var SAY_BEN = {};             // bu cihazin sayimi: ean -> {r:n, d:n}
 var SAY_HEPSI = {};           // tum cihazlar: cihaz -> {ean:{r,d}}
-var SAY_SON = [];             // geri al icin son okutulanlar
+var SAY_SON = [];
+var SAY_ZAMAN = {};            // model -> son okutma zamani (sadece bu cihaz)             // geri al icin son okutulanlar
 var SAY_FILTRE = 'TUM';
 var SAY_TMR = null;
 function sayLoad(){
@@ -790,21 +792,33 @@ function sayimEkle(kod){
   if(!SAY_BEN[v]) SAY_BEN[v] = {r:0,d:0};
   SAY_BEN[v][SAY_MOD] += 1;
   SAY_SON.push({ean:v, m:SAY_MOD});
+  SAY_ZAMAN[b.g] = new Date().getTime();
   var t = sayToplam(v);
   var sistem = b.bed ? b.bed.stok : 0;
   var sayilan = t.r + t.d;
-  var fark = sayilan - sistem;
   var ad = b.info.marka+' '+b.info.ad+' ('+(b.bed?b.bed.beden:'?')+')';
-  var onceki = sayilan-1-sistem;
-  var eslesmeYazi = '';
-  if(SAY_MOD==='d'){ eslesmeYazi = onceki<0 ? ' | ✅ ESLESTI (eksikten dustu)' : ' | ⚠️ ESLESMEDI (eksik degildi)'; }
-  var durum = fark<0 ? ('EKSIK '+(-fark)+(SAY_MOD==='r' ? ' (depoda ara)' : ' (bulunamadi)')) : (fark>0 ? ('FAZLA '+fark) : 'TAMAM');
-  var ozet = ad+' | Reyon '+t.r+' + Depo '+t.d+' = '+sayilan+' / Sistem '+sistem+' → '+durum+eslesmeYazi;
-  var tip = (SAY_MOD==='d' && onceki>=0) ? 'wn2' : (fark<0?'er':(fark>0?'wn2':'ok'));
-  toast((SAY_MOD==='d' && onceki>=0 ? '🟣 ' : (fark<0?'🔴 ':(fark>0?'🟣 ':'✅ ')))+ozet, tip);
-  setTxt('kson', (SAY_MOD==='r'?'REYON ':'DEPO ')+ad+': '+sayilan+'/'+sistem+' '+durum+eslesmeYazi);
-  playSound(fark<0 || (SAY_MOD==='d' && onceki>=0));
-  if(fark<0 && navigator.vibrate) navigator.vibrate([120,60,120]);
+  var modelR = 0;
+  b.info.bedenler.forEach(function(x){ modelR += sayToplam(x.ean).r; });
+  var onceki = sayilan - 1 - sistem;   // bu okutmadan once: (reyon+depo) - sistem
+  var msg, tip, ses = false, titre = null;
+  if(SAY_MOD==='r'){
+    var depoda = sistem - t.r;
+    msg = '📝 Reyon kaydedildi: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem + (depoda>0 ? ' → '+depoda+' adet depoda olmali' : '');
+    tip = 'ok';
+  } else if(modelR===0){
+    msg = 'ℹ️ REYONDA KAYIT YOK: '+ad+' (reyonda bu modeli okutmadin)';
+    tip = 'wn';
+  } else if(onceki<0){
+    msg = '📦 EKSIK AL! '+ad+' | Reyonda '+t.r+' / Sistem '+sistem+' → '+(-onceki)+' adet eksik' + (t.r===0 ? ' (bu beden reyonda yok)' : '');
+    tip = 'er'; ses = true; titre = [200,100,200,100,200];
+  } else {
+    msg = '✋ ALMA, reyon tam: '+ad+' | Reyonda '+t.r+' / Sistem '+sistem;
+    tip = 'wn2'; titre = [100];
+  }
+  toast(msg, tip);
+  setTxt('kson', (SAY_MOD==='r'?'REYON ':'DEPO ')+msg);
+  playSound(ses);
+  if(titre && navigator.vibrate) navigator.vibrate(titre);
   sayGonder(); sayRender();
 }
 function sayGeriAl(){
@@ -812,6 +826,14 @@ function sayGeriAl(){
   if(!s){ toast('Geri alinacak okutma yok','wn'); return; }
   if(SAY_BEN[s.ean] && SAY_BEN[s.ean][s.m]>0) SAY_BEN[s.ean][s.m] -= 1;
   toast('↩️ Son okutma geri alindi','ok');
+  sayGonder(); sayRender();
+}
+function sayDuz(ean, delta){
+  if(!SAY_BEN[ean]) SAY_BEN[ean] = {r:0,d:0};
+  var yeni = (SAY_BEN[ean][SAY_MOD]||0) + delta;
+  if(yeni<0){ toast('Bu cihazda dusurulecek okutma yok (baska cihaz okutmus olabilir)','wn'); return; }
+  SAY_BEN[ean][SAY_MOD] = yeni;
+  var b = eanBilgi(ean); if(b) SAY_ZAMAN[b.g] = new Date().getTime();
   sayGonder(); sayRender();
 }
 function sayFiltre(f, el){
@@ -837,18 +859,22 @@ function sayHesapla(){
   Object.keys(modeller).forEach(function(g){
     var info = G[g]; if(!info) return;
     var satirlar = [], mEksik=0, mFazla=0, mEslesen=0;
+    var modelR = 0;
+    info.bedenler.forEach(function(b){ modelR += sayToplam(b.ean).r; });
+    var kayitli = modelR > 0;
     info.bedenler.forEach(function(b){
       var t = sayToplam(b.ean);
       var sistem = b.stok>0 ? b.stok : 0;
       var fark = (t.r+t.d) - sistem;
-      var esl = Math.min(t.d, Math.max(0, sistem - t.r));
-      mEslesen += esl; eslesenAdet += esl;
+      var esl = kayitli ? Math.min(t.d, Math.max(0, sistem - t.r)) : 0;
       satirlar.push({beden:b.beden, ean:b.ean, sistem:sistem, r:t.r, d:t.d, fark:fark, esl:esl});
       toplamR += t.r; toplamD += t.d;
+      if(!kayitli) return;
+      mEslesen += esl; eslesenAdet += esl;
       if(fark<0){ mEksik += -fark; eksikAdet += -fark; } else if(fark>0){ mFazla += fark; fazlaAdet += fark; } else if(sistem>0 || t.r+t.d>0){ tamamSatir++; }
     });
-    var durum = mEksik>0 ? 'EKSIK' : (mFazla>0 ? 'FAZLA' : 'TAMAM');
-    liste.push({g:g, info:info, satirlar:satirlar, eksik:mEksik, fazla:mFazla, eslesen:mEslesen, durum:durum});
+    var durum = !kayitli ? 'KAYITSIZ' : (mEksik>0 ? 'EKSIK' : (mFazla>0 ? 'FAZLA' : 'TAMAM'));
+    liste.push({g:g, info:info, satirlar:satirlar, eksik:mEksik, fazla:mFazla, eslesen:mEslesen, durum:durum, r:modelR, zaman:(SAY_ZAMAN[g]||0)});
   });
   liste.sort(function(a,b){ return (b.eksik-a.eksik) || (b.fazla-a.fazla); });
   return {liste:liste, eksikAdet:eksikAdet, fazlaAdet:fazlaAdet, eslesenAdet:eslesenAdet, r:toplamR, d:toplamD};
@@ -858,27 +884,42 @@ function sayRender(){
   var el = document.getElementById('say-liste'); if(!el) return;
   var h = sayHesapla(); SAY_SON_HESAP = h;
   setTxt('say-r-n', h.r); setTxt('say-d-n', h.d); setTxt('say-e-n', h.eksikAdet); setTxt('say-m-n', h.eslesenAdet); setTxt('say-f-n', h.fazlaAdet);
-  var liste = h.liste.filter(function(m){
-    if(SAY_FILTRE==='EKSIK') return m.durum==='EKSIK';
-    if(SAY_FILTRE==='FAZLA') return m.durum==='FAZLA';
-    if(SAY_FILTRE==='TAMAM') return m.durum==='TAMAM';
-    if(SAY_FILTRE==='ESLESEN') return m.eslesen>0;
-    return true;
-  });
-  var html = '';
-  liste.slice(0,80).forEach(function(m){
-    var renk = m.durum==='EKSIK' ? '#ef4444' : (m.durum==='FAZLA' ? '#9333ea' : '#22c55e');
-    var etiket = (SAY_FILTRE==='ESLESEN' && m.eslesen>0) ? ('ESLESTI '+m.eslesen) : m.durum==='EKSIK' ? ('EKSIK '+m.eksik) : (m.durum==='FAZLA' ? ('FAZLA '+m.fazla) : 'TAMAM');
-    html += '<div class="say-kart" style="border-left:6px solid '+renk+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-size:11px;color:var(--muted);font-weight:700">'+m.info.marka+'</div><div style="font-size:15px;font-weight:700">'+m.info.ad+'</div><div style="font-size:11px;color:var(--muted)">'+m.g+'</div></div><div style="background:'+renk+';color:#fff;font-size:12px;font-weight:800;padding:5px 10px;border-radius:10px;white-space:nowrap">'+etiket+'</div></div>';
-    html += '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px"><tr style="color:var(--muted)"><td>Beden</td><td align="center">Sistem</td><td align="center">Reyon</td><td align="center">Depo</td><td align="center">Fark</td></tr>';
-    m.satirlar.forEach(function(s){
-      if(s.sistem===0 && s.r+s.d===0) return;
-      var fc = s.fark<0 ? '#ef4444' : (s.fark>0 ? '#9333ea' : '#22c55e');
-      html += '<tr style="border-top:1px solid var(--border)"><td style="padding:5px 0">'+s.beden+'</td><td align="center">'+s.sistem+'</td><td align="center">'+s.r+'</td><td align="center">'+s.d+'</td><td align="center" style="color:'+fc+';font-weight:800">'+(s.fark>0?'+':'')+s.fark+'</td></tr>';
+  var liste;
+  if(SAY_MOD==='r'){
+    liste = h.liste.filter(function(m){ return m.r>0; }).sort(function(x,y){ return y.zaman-x.zaman; });
+  } else {
+    liste = h.liste.filter(function(m){
+      if(SAY_FILTRE==='EKSIK') return m.durum==='EKSIK';
+      if(SAY_FILTRE==='FAZLA') return m.durum==='FAZLA';
+      if(SAY_FILTRE==='TAMAM') return m.durum==='TAMAM';
+      if(SAY_FILTRE==='ESLESEN') return m.eslesen>0;
+      return true;
     });
+  }
+  var html = '';
+  function pm(ean){ return '<button class="say-pm" onclick="sayDuz(\''+ean+'\',-1)">−</button><button class="say-pm" onclick="sayDuz(\''+ean+'\',1)">+</button>'; }
+  liste.slice(0,80).forEach(function(m){
+    var reyonMu = (SAY_MOD==='r');
+    var renk = reyonMu ? '#2563eb' : (m.durum==='EKSIK' ? '#ef4444' : (m.durum==='FAZLA' ? '#9333ea' : (m.durum==='KAYITSIZ' ? '#9ca3af' : '#22c55e')));
+    var etiket = reyonMu ? ('REYON '+m.r+' adet') : ((SAY_FILTRE==='ESLESEN' && m.eslesen>0) ? ('ALINDI '+m.eslesen) : m.durum==='EKSIK' ? ('EKSIK AL '+m.eksik) : (m.durum==='FAZLA' ? ('FAZLA '+m.fazla) : (m.durum==='KAYITSIZ' ? 'REYONDA KAYIT YOK' : 'TAMAM')));
+    html += '<div class="say-kart" style="border-left:6px solid '+renk+'"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div style="font-size:11px;color:var(--muted);font-weight:700">'+m.info.marka+'</div><div style="font-size:15px;font-weight:700">'+m.info.ad+'</div><div style="font-size:11px;color:var(--muted)">'+m.g+'</div></div><div style="background:'+renk+';color:#fff;font-size:13px;font-weight:800;padding:6px 10px;border-radius:10px;white-space:nowrap">'+etiket+'</div></div>';
+    if(reyonMu){
+      html += '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13px"><tr style="color:var(--muted);font-size:11px"><td>Beden</td><td align="center">Reyonda</td><td align="center">Sistem</td><td align="right">Duzelt</td></tr>';
+      m.satirlar.forEach(function(s){
+        if(s.r===0) return;
+        html += '<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700">'+s.beden+'</td><td align="center" style="font-size:20px;font-weight:800;color:#2563eb">'+s.r+'</td><td align="center" style="color:var(--muted)">'+s.sistem+'</td><td align="right">'+pm(s.ean)+'</td></tr>';
+      });
+    } else {
+      html += '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px"><tr style="color:var(--muted)"><td>Beden</td><td align="center">Sistem</td><td align="center">Reyon</td><td align="center">Depo</td><td align="center">Fark</td><td align="right">Duzelt</td></tr>';
+      m.satirlar.forEach(function(s){
+        if(s.sistem===0 && s.r+s.d===0) return;
+        var fc = s.fark<0 ? '#ef4444' : (s.fark>0 ? '#9333ea' : '#22c55e');
+        html += '<tr style="border-top:1px solid var(--border)"><td style="padding:5px 0">'+s.beden+'</td><td align="center">'+s.sistem+'</td><td align="center">'+s.r+'</td><td align="center">'+s.d+(s.esl>0?' ✅':'')+'</td><td align="center" style="color:'+fc+';font-weight:800">'+(s.fark>0?'+':'')+s.fark+'</td><td align="right">'+pm(s.ean)+'</td></tr>';
+      });
+    }
     html += '</table></div>';
   });
-  if(!liste.length) html = '<div class="empty"><span>📋</span><p>'+(h.liste.length?'Bu filtrede urun yok':'Henuz sayim yapilmadi. Reyon ya da Depo sec, barkodlari okut.')+'</p></div>';
+  if(!liste.length) html = '<div class="empty"><span>📋</span><p>'+(SAY_MOD==='r' ? 'Reyondaki urunleri okut, burada adetleriyle listelenir.' : (h.liste.length?'Bu filtrede urun yok':'Henuz sayim yapilmadi.'))+'</p></div>';
   el.innerHTML = html;
 }
 function sayYenile(){
