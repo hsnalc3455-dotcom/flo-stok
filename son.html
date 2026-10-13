@@ -130,7 +130,7 @@ body.light .kmodal-ipucu{color:#888}
 
 .tablo .durum-uyari{background:rgba(220,38,38,.15);color:#dc2626;font-weight:700;text-align:center;border-radius:6px;font-size:11px}
 #tab-hareketsiz.a{color:var(--danger);border-bottom-color:var(--danger)}
-.say-mod{flex:1;padding:14px;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-family:'Bebas Neue',Arial,sans-serif;font-size:20px;cursor:pointer}
+.say-mod{flex:1;padding:10px 4px;line-height:1.25;border-radius:14px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-family:'Bebas Neue',Arial,sans-serif;font-size:17px;cursor:pointer}
 .say-mod.a{background:var(--accent);border-color:var(--accent);color:#fff}
 .say-btn{flex:1;padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;cursor:pointer}
 .say-f{padding:8px 14px;border-radius:20px;border:2px solid var(--border);background:var(--surface);color:var(--text);font-weight:700;cursor:pointer}
@@ -146,7 +146,7 @@ body.light .kmodal-ipucu{color:#888}
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v11.13 (SON OKUTULAN BASTA)</div>
+        <div class="header-sub">PELIKAN v11.16 (EKSIK SEKMESINE GIDER)</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -228,12 +228,13 @@ body.light .kmodal-ipucu{color:#888}
 </div>
 <div class="pg" id="pg-sayim">
   <div style="padding:14px">
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button id="say-r" class="say-mod a" onclick="sayModSec('r')">🛍️ REYON</button>
-      <button id="say-d" class="say-mod" onclick="sayModSec('d')">📦 DEPO</button>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button id="say-r" class="say-mod a" onclick="sayModSec('r')">🛍️ REYON<br><span id="say-r-c" style="font-size:14px">0</span></button>
+      <button id="say-e" class="say-mod" onclick="sayModSec('e')">⚠️ EKSIK<br><span id="say-e-c" style="font-size:14px">0</span></button>
+      <button id="say-d" class="say-mod" onclick="sayModSec('d')">📦 DEPO<br><span id="say-d-c" style="font-size:14px">0</span></button>
     </div>
     <label style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:6px;font-size:13px;font-weight:700"><input type="checkbox" id="say-oto" checked style="width:20px;height:20px"> Reyonda okutunca stok kadar yaz (ayni urunu tekrar okutursan sayilmaz)</label>
-    <label style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px;font-size:13px;font-weight:700"><input type="checkbox" id="say-sor" style="width:20px;height:20px"> Reyonda okutunca adedi sor</label>
+    <label style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px;font-size:13px;font-weight:700"><input type="checkbox" id="say-sor" checked style="width:20px;height:20px"> Reyonda okutunca adedi sor (kac adet var yaz)</label>
     <div id="say-mod-yazi" style="text-align:center;font-weight:800;margin-bottom:10px">REYON sayiyorsun</div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="say-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="sayimEkle()">EKLE</button></div>
     <button class="kamera-btn" onclick="sayKameraAc()">📷 KAMERA ILE SAY</button>
@@ -250,13 +251,7 @@ body.light .kmodal-ipucu{color:#888}
       <div class="stat" style="flex:1"><div class="sn" id="say-f-n" style="color:#9333ea">0</div><div class="sl">Fazla</div></div>
     </div>
     <div id="say-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Sayim hazir</div>
-    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-      <button class="say-f a" data-f="TUM" onclick="sayFiltre('TUM',this)">Hepsi</button>
-      <button class="say-f" data-f="EKSIK" onclick="sayFiltre('EKSIK',this)">Eksik (al)</button>
-      <button class="say-f" data-f="FAZLA" onclick="sayFiltre('FAZLA',this)">Fazla</button>
-      <button class="say-f" data-f="ESLESEN" onclick="sayFiltre('ESLESEN',this)">Depodan alinan</button>
-      <button class="say-f" data-f="TAMAM" onclick="sayFiltre('TAMAM',this)">Tamam</button>
-    </div>
+    
     <div id="say-liste"></div>
     <button class="rb" onclick="sayYeni()">🆕 Yeni sayim baslat (sifirla)</button>
   </div>
@@ -741,6 +736,7 @@ function excelIsle(rows){
 // ===== SAYIM (MODEL bazli: reyon / depo) =====
 var CIHAZ = (function(){ try{ var c=localStorage.getItem('CIHAZ'); if(!c){ c='c'+Math.random().toString(36).slice(2,8); localStorage.setItem('CIHAZ',c);} return c; }catch(e){ return 'c'+Math.random().toString(36).slice(2,8); } })();
 var SAY_TUR = '0';
+var SAY_BOLUM = 'r';          // gorunen bolum: r = reyon, e = eksik, d = depo
 var SAY_MOD = 'r';            // r = reyon, d = depo
 var SAY_BEN = {};             // bu cihaz: model(generic) -> {r:n, d:n}
 var SAY_HEPSI = {};           // tum cihazlar: cihaz -> {model:{r,d}}
@@ -784,14 +780,20 @@ function bedenOzet(g){
   return i.bedenler.filter(function(b){return b.stok>0;}).map(function(b){return b.beden+':'+b.stok;}).join('  ');
 }
 function sayModSec(m){
-  SAY_MOD = m; SAY_SABIT = {}; SAY_ONE = '';
-  var r=document.getElementById('say-r'), d=document.getElementById('say-d');
-  r.className = 'say-mod' + (m==='r'?' a':''); d.className = 'say-mod' + (m==='d'?' a':'');
-  setTxt('say-mod-yazi', m==='r' ? 'REYON sayiyorsun' : 'DEPO sayiyorsun');
-  var fb = document.querySelectorAll('.say-f');
-  if(fb.length>=3){ var hedef = (m==='d') ? 'EKSIK' : 'TUM'; SAY_FILTRE = hedef; for(var i=0;i<fb.length;i++){ fb[i].className = 'say-f' + (fb[i].getAttribute('data-f')===hedef ? ' a' : ''); } }
+  SAY_BOLUM = m;
+  SAY_MOD = (m==='r') ? 'r' : 'd';
+  SAY_SABIT = {}; SAY_ONE = '';
+  var ids = ['r','e','d'];
+  for(var i=0;i<ids.length;i++){ var el0=document.getElementById('say-'+ids[i]); if(el0) el0.className = 'say-mod' + (ids[i]===m?' a':''); }
+  setTxt('say-mod-yazi', m==='r' ? 'REYON sayiyorsun' : (m==='d' ? 'DEPO sayiyorsun' : 'EKSIK listesi: depodan okutursan alinan sayilir'));
   var bi=document.getElementById('say-bi'); if(bi) bi.focus();
   sayRender();
+}
+function sayBolumGoster(m){
+  SAY_BOLUM = m;
+  var ids = ['r','e','d'];
+  for(var i=0;i<ids.length;i++){ var el0=document.getElementById('say-'+ids[i]); if(el0) el0.className = 'say-mod' + (ids[i]===m?' a':''); }
+  setTxt('say-mod-yazi', m==='r' ? 'REYON sayiyorsun' : (m==='d' ? 'DEPO sayiyorsun' : 'EKSIK listesi: depodan okutursan alinan sayilir'));
 }
 function sayimEkle(kod){
   var v = (kod!==undefined) ? String(kod) : document.getElementById('say-bi').value.replace(/\s/g,'');
@@ -830,6 +832,7 @@ function sayimEkle(kod){
   }
   if(SAY_MOD==='d') SAY_SABIT[g] = true;
   if(say){ SAY_SON.push({g:g, m:SAY_MOD, n:(SAY_MOD==='r' && SAY_BEN[g].r===toplam && (document.getElementById('say-oto')||{}).checked ? toplam : 1)}); SAY_ZAMAN[g] = new Date().getTime(); }
+  if(SAY_MOD==='d'){ sayBolumGoster(tip==='er' ? 'e' : 'd'); }
   toast(msg, tip);
   setTxt('kson', (SAY_MOD==='r'?'REYON ':'DEPO ')+msg);
   playSound(ses);
@@ -907,25 +910,22 @@ function sayRender(){
   var el = document.getElementById('say-liste'); if(!el) return;
   var yPos = window.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || 0;
   var h = sayHesapla(); SAY_SON_HESAP = h;
+  var nr=0, ne=0, nd=0, neA=0; h.liste.forEach(function(m){ if(m.r>0) nr++; if(m.r>0 && m.stok-m.r-m.d>0){ ne++; neA += m.stok-m.r-m.d; } if(m.d>0) nd++; });
+  setTxt('say-r-c', nr+' model'); setTxt('say-e-c', ne+' model / '+neA+' adet'); setTxt('say-d-c', nd+' model');
   setTxt('say-r-n', h.r); setTxt('say-d-n', h.d); setTxt('say-e-n', h.eksikAdet); setTxt('say-f-n', h.fazlaAdet); setTxt('say-m-n', h.alinan);
   var liste;
-  if(SAY_MOD==='r'){
+  if(SAY_BOLUM==='r'){
     liste = h.liste.filter(function(m){ return m.r>0; }).sort(function(x,y){ return y.zaman-x.zaman; });
+  } else if(SAY_BOLUM==='e'){
+    liste = h.liste.filter(function(m){ return SAY_SABIT[m.g] || (m.r>0 && m.stok-m.r-m.d>0); });
   } else {
-    liste = h.liste.filter(function(m){
-      if(SAY_SABIT[m.g]) return true;
-      if(SAY_FILTRE==='EKSIK') return m.durum==='EKSIK';
-      if(SAY_FILTRE==='FAZLA') return m.durum==='FAZLA';
-      if(SAY_FILTRE==='TAMAM') return m.durum==='TAMAM';
-      if(SAY_FILTRE==='ESLESEN') return m.d>0;
-      return true;
-    });
+    liste = h.liste.filter(function(m){ return SAY_SABIT[m.g] || m.d>0; });
   }
   if(SAY_ONE){ for(var oi=0;oi<liste.length;oi++){ if(liste[oi].g===SAY_ONE){ var om = liste.splice(oi,1)[0]; liste.unshift(om); break; } } }
   function pm(g){ return '<button class="say-pm" onclick="sayDuz(\''+g+'\',-1)">−</button><button class="say-pm" onclick="sayDuz(\''+g+'\',1)">+</button>'; }
   var html = '';
   liste.slice(0,80).forEach(function(m){
-    var reyonMu = (SAY_MOD==='r');
+    var reyonMu = (SAY_BOLUM==='r');
     var renk = reyonMu ? '#2563eb' : (m.durum==='EKSIK' ? '#ef4444' : (m.durum==='FAZLA' ? '#9333ea' : (m.durum==='KAYITSIZ' ? '#9ca3af' : '#22c55e')));
     var etiket = reyonMu ? ('REYON '+m.r+' adet') : (m.durum==='EKSIK' ? ('EKSIK AL '+m.eksik) : (m.durum==='FAZLA' ? ('FAZLA '+m.fazla) : (m.durum==='KAYITSIZ' ? 'REYONDA KAYIT YOK' : 'TAMAM')));
     var sonMu = (m.g===SAY_ONE);
@@ -935,9 +935,12 @@ function sayRender(){
     html += '<div style="flex:1;text-align:center" onclick="sayAdetGir(\''+m.g+'\')"><div style="font-size:11px;color:var(--muted)">Reyonda</div><div style="font-size:26px;font-weight:800;color:#2563eb;text-decoration:underline">'+m.r+'</div></div>';
     html += '<div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--muted)">Depodan alinan</div><div style="font-size:26px;font-weight:800;color:#22c55e">'+m.d+'</div></div>';
     html += '<div style="white-space:nowrap">'+pm(m.g)+'</div></div>';
+    var kalanEksik = m.stok - m.r - m.d;
+    if(m.r>0 && kalanEksik>0){ html += '<div style="margin-top:8px;padding:6px 10px;border-radius:8px;background:rgba(239,68,68,.12);color:#dc2626;font-size:13px;font-weight:800">⚠️ '+kalanEksik+' adet eksik → depodan alinacak</div>'; }
+    else if(m.r>0 && kalanEksik<=0){ html += '<div style="margin-top:8px;padding:6px 10px;border-radius:8px;background:rgba(34,197,94,.12);color:#16a34a;font-size:13px;font-weight:800">✅ Tamam, eksik yok</div>'; }
     html += '<div style="font-size:11px;color:var(--muted);margin-top:8px">Bedenler (stok): '+bedenOzet(m.g)+'</div></div>';
   });
-  if(!liste.length) html = '<div class="empty"><span>📋</span><p>'+(SAY_MOD==='r' ? 'Reyondaki urunu okut, stoktaki toplam adetle burada listelenir.' : (h.liste.length?'Bu filtrede urun yok':'Henuz sayim yapilmadi.'))+'</p></div>';
+  if(!liste.length) html = '<div class="empty"><span>📋</span><p>'+(SAY_BOLUM==='r' ? 'Reyondaki urunu okut, stoktaki toplam adetle burada listelenir.' : (SAY_BOLUM==='e' ? 'Eksik urun yok (ya da reyonda urun okutmadin).' : 'Depodan alinan urun yok. Depodaki urunu okut.'))+'</p></div>';
   el.innerHTML = html;
   try{ if(SAY_KAYDIR){ SAY_KAYDIR=false; window.scrollTo(0, Math.max(0, el.offsetTop - 140)); } else { window.scrollTo(0, yPos); } }catch(e){}
 }
