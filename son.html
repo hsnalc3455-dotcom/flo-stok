@@ -137,6 +137,7 @@ body.light .kmodal-ipucu{color:#888}
 .say-f.a{background:var(--text);color:var(--bg);border-color:var(--text)}
 .say-kart{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px}
 .say-pm{width:46px;height:44px;margin-left:6px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:16px;font-weight:800;cursor:pointer}
+#tek-uyari{display:none;position:fixed;left:10px;right:10px;top:10px;z-index:100000;background:#7c2d12;color:#fff;border:3px solid #fbbf24;border-radius:14px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
 </style>
 </head>
 <body>
@@ -146,7 +147,7 @@ body.light .kmodal-ipucu{color:#888}
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v11.16 (EKSIK SEKMESINE GIDER)</div>
+        <div class="header-sub">PELIKAN v12.0 (TEKLEME)</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -158,6 +159,7 @@ body.light .kmodal-ipucu{color:#888}
   <div class="tab" id="tab-degisim" onclick="goTab('degisim',this)">📊 STOK TAKIP</div>
   <div class="tab" id="tab-hareketsiz" onclick="goTab('hareketsiz',this)" style="color:var(--danger)">⚠️ HAREKETSIZ</div>
   <div class="tab" id="tab-sayim" onclick="goTab('sayim',this)" style="color:#0891b2">📋 SAYIM</div>
+  <div class="tab" id="tab-tekleme" onclick="goTab('tekleme',this)" style="color:#d97706">👟 TEKLEME</div>
   <div class="tab" id="tab-trend" onclick="goTab('trend',this)" style="color:#8b5cf6">📈 TREND</div>
 </div>
 <div class="pg a" id="pg-tum">
@@ -256,6 +258,37 @@ body.light .kmodal-ipucu{color:#888}
     <button class="rb" onclick="sayYeni()">🆕 Yeni sayim baslat (sifirla)</button>
   </div>
 </div>
+<div class="pg" id="pg-tekleme">
+  <div style="padding:14px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="stat r" style="flex:1"><div class="sn" id="tek-n-b">0</div><div class="sl">Bekleyen tekleme</div></div>
+      <div class="stat g" style="flex:1"><div class="sn" id="tek-n-e">0</div><div class="sl">Eşleşen</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:700">Elimdeki ayak</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button id="tek-sag" class="say-mod a" onclick="tekAyakSec('SAG')">👉 SAĞ</button>
+      <button id="tek-sol" class="say-mod" onclick="tekAyakSec('SOL')">👈 SOL</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button id="tek-mk" class="say-mod a" onclick="tekModSec('k')">➕ KAYDET</button>
+      <button id="tek-me" class="say-mod" onclick="tekModSec('e')">🔎 EŞLE</button>
+    </div>
+    <div id="tek-mod-yazi" style="text-align:center;font-weight:700;font-size:13px;margin-bottom:10px"></div>
+    <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tek-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="tekOkut()">EKLE</button></div>
+    <button class="kamera-btn" onclick="tekKameraAc()">📷 KAMERA İLE OKUT</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="say-btn" onclick="tekYenile()">🔄 Yenile</button>
+      <button class="say-btn" onclick="tekExcel()">📥 Excel</button>
+    </div>
+    <div id="tek-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Tekleme hazır</div>
+    <input type="text" class="bi" id="tek-ara" placeholder="Listede ara (model, beden...)" oninput="tekRender()" style="margin-bottom:10px">
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button id="tek-fb" class="say-f a" onclick="tekFiltre('B')">Bekleyen</button>
+      <button id="tek-fe" class="say-f" onclick="tekFiltre('E')">Eşleşen</button>
+    </div>
+    <div id="tek-liste"></div>
+  </div>
+</div>
 <div class="pg" id="pg-trend">
   <div class="firsat-hero" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)"><div style="font-size:64px;margin-bottom:8px">📈</div><h2>STOK TRENDI</h2><p>Gunluk stok ve hareket gecmisi</p></div>
   <div style="padding:14px">
@@ -301,6 +334,7 @@ body.light .kmodal-ipucu{color:#888}
   </div>
 </div>
 <div id="ios-qr-reader" style="display:none"></div>
+<div id="tek-uyari"></div>
 <div id="toast"></div>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -800,6 +834,7 @@ function sayimEkle(kod){
   if(!v) return;
   if(kod===undefined){ document.getElementById('say-bi').value=''; document.getElementById('say-bi').focus(); }
   var g = D[v];
+  try{teklemeKontrol(v);}catch(e){}
   if(!g || !G[g]){ toast('⚠️ Bu barkod stok listesinde yok','wn'); setTxt('kson','⚠️ Listede yok: '+v); return; }
   var toplam = getToplam(g);
   var ad = modelAd(g);
@@ -993,6 +1028,170 @@ window.addEventListener('load', function(){
   if(bi) bi.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.keyCode===13){ if(e.preventDefault) e.preventDefault(); sayimEkle(); } });
   sayModSec('r'); sayRender();
   setInterval(function(){ var p=document.getElementById('pg-sayim'); if(p && p.className.indexOf(' a')>-1 && !document.hidden) sayYenile(); }, 15000);
+});
+
+// ===== TEKLEME (tek kalan ayakkabi) =====
+var TEK = {};                 // id -> kayit
+var TEK_AYAK = 'SAG';         // elimdeki ayak
+var TEK_MOD = 'k';            // k = kaydet, e = esle
+var TEK_FILTRE = 'B';         // B = bekleyen, E = eslesen
+function tekCihaz(){ try{ return CIHAZ; }catch(e){ return 'cihaz'; } }
+function tekCacheYaz(){ try{ localStorage.setItem('TEK_CACHE', JSON.stringify(TEK)); }catch(e){} }
+(function(){ try{ var c=localStorage.getItem('TEK_CACHE'); if(c) TEK=JSON.parse(c); }catch(e){ TEK={}; } })();
+function tekListe(){ var r=[]; for(var k in TEK){ if(TEK.hasOwnProperty(k) && TEK[k]) r.push(TEK[k]); } return r; }
+function tekBekleyen(ean){ return tekListe().filter(function(x){ return x.durum==='BEKLIYOR' && x.ean===ean; }).sort(function(a,b){ return a.tarih-b.tarih; }); }
+function tekDiger(a){ return a==='SAG' ? 'SOL' : 'SAG'; }
+function tekAyakAd(a){ return a==='SAG' ? 'SAĞ' : 'SOL'; }
+function tekYaz(rec){
+  rec.sync=false; tekCacheYaz();
+  var kopya={}; for(var k in rec){ if(rec.hasOwnProperty(k) && k!=='sync') kopya[k]=rec[k]; }
+  fbPut('teklemePelikan/'+rec.id, kopya, function(st){
+    if(st<200 || st>=300){ tekCacheYaz(); toast('❌ Tekleme kaydi gonderilemedi: '+hataMetni(st),'wn'); setTxt('tek-durum','🔴 '+hataMetni(st)); }
+    else { delete rec.sync; tekCacheYaz(); setTxt('tek-durum','🟢 Tekleme senkron ('+new Date().toLocaleTimeString('tr-TR')+')'); }
+  });
+}
+function tekYenile(){
+  fbGet('teklemePelikan', function(st, data){
+    if(st>=200 && st<300){
+      var yeni = data || {};
+      for(var k in TEK){ if(TEK.hasOwnProperty(k) && TEK[k] && TEK[k].sync===false){ yeni[k]=TEK[k]; } }
+      TEK = yeni; tekCacheYaz();
+      setTxt('tek-durum','🟢 Tekleme senkron ('+new Date().toLocaleTimeString('tr-TR')+')');
+    } else { setTxt('tek-durum','🔴 '+hataMetni(st)); }
+    tekRender();
+  });
+}
+function tekAyakSec(a){
+  TEK_AYAK = a;
+  var s=document.getElementById('tek-sag'), l=document.getElementById('tek-sol');
+  if(s) s.className='say-mod'+(a==='SAG'?' a':''); if(l) l.className='say-mod'+(a==='SOL'?' a':'');
+  tekModYazi();
+}
+function tekModSec(m){
+  TEK_MOD = m;
+  var k=document.getElementById('tek-mk'), e=document.getElementById('tek-me');
+  if(k) k.className='say-mod'+(m==='k'?' a':''); if(e) e.className='say-mod'+(m==='e'?' a':'');
+  tekModYazi();
+  var bi=document.getElementById('tek-bi'); if(bi) bi.focus();
+}
+function tekModYazi(){
+  var t;
+  if(TEK_MOD==='k') t = 'KAYDET: elindeki '+tekAyakAd(TEK_AYAK)+' ayagi okut. '+tekAyakAd(tekDiger(TEK_AYAK))+' ayagi aranacak.';
+  else t = 'ESLE: bulduğun '+tekAyakAd(TEK_AYAK)+' ayagi okut. Kayitli '+tekAyakAd(tekDiger(TEK_AYAK))+' ile eslenir.';
+  setTxt('tek-mod-yazi', t);
+}
+function tekFiltre(f){
+  TEK_FILTRE = f;
+  var b=document.getElementById('tek-fb'), e=document.getElementById('tek-fe');
+  if(b) b.className='say-f'+(f==='B'?' a':''); if(e) e.className='say-f'+(f==='E'?' a':'');
+  tekRender();
+}
+function tekBanner(html){
+  var el=document.getElementById('tek-uyari'); if(!el) return;
+  el.innerHTML = html; el.style.display='block';
+  clearTimeout(window.__tekT); window.__tekT = setTimeout(function(){ el.style.display='none'; }, 12000);
+}
+function tekBannerKapat(){ var el=document.getElementById('tek-uyari'); if(el) el.style.display='none'; }
+function tekAdi(r){ return r.marka+' '+r.ad+' ('+r.beden+')'; }
+function tekEsle(id){
+  var r = TEK[id]; if(!r) return;
+  r.durum='ESLESTI'; r.esTarih=new Date().getTime(); r.esCihaz=tekCihaz();
+  tekCacheYaz(); tekYaz(r); tekBannerKapat();
+  toast('✅ EŞLENDİ! '+tekAdi(r)+' — tekleme tamam','ok');
+  try{ playSound(true); if(navigator.vibrate) navigator.vibrate([150,80,150,80,300]); }catch(e){}
+  tekRender();
+}
+// herhangi bir ekrandan okutulunca cagirilir
+function teklemeKontrol(ean){
+  var b = tekBekleyen(ean); if(!b.length) return;
+  var r = b[0];
+  var html = '<div style="font-size:15px;font-weight:800">👟 TEKLEME VAR!</div><div style="font-size:14px;margin:4px 0">'+tekAdi(r)+'</div><div style="font-size:13px">'+tekAyakAd(r.ayak)+' ayak kayıtlı, <b>'+tekAyakAd(tekDiger(r.ayak))+'</b> ayak aranıyor'+(b.length>1?' ('+b.length+' kayıt)':'')+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="say-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="tekEsle(\''+r.id+'\')">✅ '+tekAyakAd(tekDiger(r.ayak))+' ayağı buldum, EŞLE</button><button class="say-btn" onclick="tekBannerKapat()">Kapat</button></div>';
+  tekBanner(html);
+  try{ playSound(true); if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+}
+function tekOkut(kod){
+  var v = (kod!==undefined) ? String(kod) : document.getElementById('tek-bi').value.replace(/\s/g,'');
+  if(kod===undefined){ var bi=document.getElementById('tek-bi'); bi.value=''; bi.focus(); }
+  if(!v) return;
+  var g = D[v];
+  if(!g || !G[g]){ toast('⚠️ Bu barkod stok listesinde yok','wn'); setTxt('kson','⚠️ Listede yok: '+v); return; }
+  var info = G[g], bed = null;
+  for(var i=0;i<info.bedenler.length;i++){ if(info.bedenler[i].ean===v) bed = info.bedenler[i]; }
+  var beden = bed ? bed.beden : '?';
+  var bekl = tekBekleyen(v);
+  if(TEK_MOD==='k'){
+    var id = 't'+new Date().getTime()+Math.random().toString(36).slice(2,5);
+    var rec = {id:id, ean:v, g:g, marka:info.marka, ad:info.ad, beden:beden, ayak:TEK_AYAK, durum:'BEKLIYOR', tarih:new Date().getTime(), cihaz:tekCihaz()};
+    TEK[id] = rec; tekCacheYaz(); tekYaz(rec);
+    var m = '👟 Tekleme kaydedildi: '+info.marka+' '+info.ad+' ('+beden+') | elinde '+tekAyakAd(TEK_AYAK)+', '+tekAyakAd(tekDiger(TEK_AYAK))+' aranacak';
+    toast(m,'ok'); setTxt('kson',m);
+    try{ playSound(false); }catch(e){}
+  } else {
+    var uygun = bekl.filter(function(x){ return x.ayak!==TEK_AYAK; });
+    if(uygun.length){
+      var r0 = uygun[0];
+      tekEsle(r0.id);
+      setTxt('kson','✅ EŞLENDİ: '+tekAdi(r0));
+    } else if(bekl.length){
+      var m2 = '⚠️ Aynı ayak: kayıtlı tekleme de '+tekAyakAd(bekl[0].ayak)+', elindeki de '+tekAyakAd(TEK_AYAK)+' — eşleşmez';
+      toast(m2,'wn'); setTxt('kson',m2);
+    } else {
+      var m3 = 'ℹ️ Bu üründe tekleme kaydı yok: '+info.marka+' '+info.ad+' ('+beden+')';
+      toast(m3,'wn'); setTxt('kson',m3);
+    }
+  }
+  tekRender();
+}
+function tekSil(id){
+  var r = TEK[id]; if(!r) return;
+  if(!confirm('Bu tekleme kaydi silinsin mi?\n'+tekAdi(r))) return;
+  delete TEK[id]; tekCacheYaz();
+  fbIstek('DELETE', 'teklemePelikan/'+id, null, function(st){ if(st<200 || st>=300) toast('❌ '+hataMetni(st),'wn'); });
+  tekRender();
+}
+function tekKameraAc(){ kameraAc('tekleme'); }
+function tekRender(){
+  var el = document.getElementById('tek-liste'); if(!el) return;
+  var tum = tekListe();
+  var bek = tum.filter(function(x){ return x.durum==='BEKLIYOR'; });
+  var esl = tum.filter(function(x){ return x.durum==='ESLESTI'; });
+  setTxt('tek-n-b', bek.length); setTxt('tek-n-e', esl.length);
+  var aramaEl = document.getElementById('tek-ara'); var ara = aramaEl ? aramaEl.value.toLowerCase().replace(/^\s+|\s+$/g,'') : '';
+  var liste = (TEK_FILTRE==='B' ? bek : esl).filter(function(x){ return !ara || (x.marka+' '+x.ad+' '+x.beden+' '+x.ean+' '+x.g).toLowerCase().indexOf(ara)>-1; });
+  liste.sort(function(a,b){ return TEK_FILTRE==='B' ? (b.tarih-a.tarih) : ((b.esTarih||0)-(a.esTarih||0)); });
+  var html = '';
+  liste.slice(0,150).forEach(function(r){
+    var tr = new Date(r.tarih).toLocaleDateString('tr-TR');
+    var renk = r.durum==='ESLESTI' ? '#22c55e' : '#f59e0b';
+    html += '<div class="say-kart" style="border-left:6px solid '+renk+'"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><div style="font-size:11px;color:var(--muted);font-weight:700">'+r.marka+'</div><div style="font-size:15px;font-weight:700">'+r.ad+'</div><div style="font-size:11px;color:var(--muted)">'+r.g+' · '+tr+(r.sync===false?' · ⏳ gonderilmedi':'')+'</div></div><div style="font-size:22px;font-weight:800;color:'+renk+'">'+r.beden+'</div></div>';
+    if(r.durum==='BEKLIYOR'){
+      html += '<div style="margin-top:8px;font-size:14px;font-weight:700">'+(r.ayak==='SAG'?'👉 SAĞ var':'👈 SOL var')+' → <span style="color:#dc2626">'+tekAyakAd(tekDiger(r.ayak))+' aranıyor</span></div>';
+      html += '<div style="margin-top:8px;display:flex;gap:8px"><button class="say-btn" onclick="tekEsle(\''+r.id+'\')">✅ Eşleşti</button><button class="say-btn" style="flex:0 0 52px" onclick="tekSil(\''+r.id+'\')">🗑</button></div>';
+    } else {
+      html += '<div style="margin-top:8px;font-size:13px;font-weight:700;color:#16a34a">✅ Eşlendi '+(r.esTarih?new Date(r.esTarih).toLocaleDateString('tr-TR'):'')+'</div><div style="margin-top:6px"><button class="say-btn" style="flex:0 0 52px" onclick="tekSil(\''+r.id+'\')">🗑</button></div>';
+    }
+    html += '</div>';
+  });
+  if(!liste.length) html = '<div class="empty"><span>👟</span><p>'+(TEK_FILTRE==='B' ? 'Bekleyen tekleme yok. Elindeki tek ayağı okutup kaydet.' : 'Henüz eşleşen tekleme yok.')+'</p></div>';
+  el.innerHTML = html;
+}
+function tekExcel(){
+  var bek = tekListe().filter(function(x){ return x.durum==='BEKLIYOR'; });
+  if(!bek.length){ toast('⚠️ Bekleyen tekleme yok','wn'); return; }
+  var rows = [['MARKA','MODEL','GENERIC','BEDEN','ELDEKI AYAK','ARANAN AYAK','TARIH','EAN']];
+  bek.sort(function(a,b){ return a.tarih-b.tarih; }).forEach(function(r){ rows.push([r.marka, r.ad, r.g, r.beden, tekAyakAd(r.ayak), tekAyakAd(tekDiger(r.ayak)), new Date(r.tarih).toLocaleDateString('tr-TR'), r.ean]); });
+  var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:16},{wch:30},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws, 'TEKLEME');
+  XLSX.writeFile(wb, 'Tekleme_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('📥 Tekleme listesi indirildi','ok');
+}
+window.addEventListener('load', function(){
+  var bi=document.getElementById('tek-bi');
+  if(bi) bi.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.keyCode===13){ if(e.preventDefault) e.preventDefault(); tekOkut(); } });
+  tekAyakSec('SAG'); tekModSec('k'); tekRender();
+  setTimeout(tekYenile, 800);
+  setInterval(function(){ if(!document.hidden) tekYenile(); }, 30000);
 });
 
 var stream=null;var detector=null;var animFrame=null;var taramaAktif=false;
@@ -1189,6 +1388,7 @@ function excelIndir(){
 
 function ekle(k){
   var v=k!==undefined?String(k):document.getElementById('bi').value.trim();if(!v)return;
+  try{teklemeKontrol(v);}catch(e){}
   var g=D[v];
   if(!g){toast('⚠️ Bu urun stokta yok!','wn');if(k===undefined){document.getElementById('bi').value='';document.getElementById('bi').focus();}return;}
   C[g]=(C[g]||0)+1;
@@ -1250,12 +1450,14 @@ function goTab(id,el){
   if(id==='degisim'){renderDegisim();farkCek();}
   if(id==='hareketsiz'){renderHareketsiz();farkCek();}
   if(id==='trend')renderTrend();
+  if(id==='tekleme'){tekRender();tekYenile();document.getElementById('tek-bi').focus();}
   if(id==='sayim'){sayRender();sayYenile();document.getElementById('say-bi').focus();}
 }
 var html5QrCode=null;
 var KAMERA_KAYNAK = 'ana';
 function kameraSonucIsle(kod){
   if(KAMERA_KAYNAK==='sayim'){sayimEkle(kod);return;}
+  if(KAMERA_KAYNAK==='tekleme'){tekOkut(kod);return;}
   ekle(kod);
 }
 function kameraAc(kaynak){
