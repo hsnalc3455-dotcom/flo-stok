@@ -180,9 +180,9 @@ body.light .kmodal-ipucu{color:#888}
   <div class="header-inner">
     <div class="logo">FLO</div>
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
-      <button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
+      <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v14.1 (SESLI ANONS)</div>
+        <div class="header-sub">PELIKAN v14.2 (OZEL SES)</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -376,6 +376,7 @@ body.light .kmodal-ipucu{color:#888}
 <div id="ios-qr-reader" style="display:none"></div>
 <div id="tek-uyari"></div>
 <div id="gecisAyak">👟</div>
+<div id="sesModal" style="display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:99995;background:rgba(0,0,0,.6);overflow:auto"><div style="margin:30px 12px;background:var(--surface);color:var(--text);border-radius:14px;padding:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-weight:800;font-size:16px">🎙 Ses kayitlari</div><button class="say-pm" style="margin:0" onclick="sesAyarKapat()">✖</button></div><div style="font-size:12px;color:var(--muted);margin-bottom:6px">🎙 bas, konus (en fazla 4 sn), kayit biter ve calar. Kayitlar tum cihazlarda ortak olur.</div><div id="sesIc"></div></div></div>
 <div id="toast"></div>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -877,7 +878,7 @@ function sayimEkle(kod){
   if(kod===undefined){ document.getElementById('say-bi').value=''; document.getElementById('say-bi').focus(); }
   var g = D[v];
   try{ teklemeKontrol(v); }catch(e){}
-  if(!g || !G[g]){ toast('⚠️ Bu barkod stok listesinde yok','wn'); setTxt('kson','⚠️ Listede yok: '+v); sesCal('hata'); return; }
+  if(!g || !G[g]){ toast('⚠️ Bu barkod stok listesinde yok','wn'); setTxt('kson','⚠️ Listede yok: '+v); sesCal('hata'); konus('Listede yok', 300, 'yok'); return; }
   var stok = getToplam(g), ad = modelAd(g), t = sayToplam(g);
   SAY_ONE = g; SAY_KAYDIR = true; SAY_SABIT[g] = true; SAY_ANIM = true;
   if(SAY_MOD==='r'){
@@ -888,23 +889,23 @@ function sayimEkle(kod){
     return;
   }
   // DEPO
-  var msg, tip, ses=false, titre=null, soz='';
+  var msg, tip, ses=false, titre=null, soz='', sozK='';
   if(!t.kayit){
-    msg = 'ℹ️ Reyonda kayit yok: '+ad+' (stok '+stok+')'; tip='wn'; soz='Reyonda kayıt yok';
+    msg = 'ℹ️ Reyonda kayit yok: '+ad+' (stok '+stok+')'; tip='wn'; soz='Reyonda kayıt yok'; sozK='yok';
   } else {
     var kalan = stok - t.r - t.d;
     if(kalan>0){
-      soz = 'Eksik al. '+kalan+' adet kaldı';
+      soz = 'Eksik al.'; sozK='eksik';
       sayYaz(g, 'd', (SAY_BEN[g] && SAY_BEN[g].d ? SAY_BEN[g].d : 0) + 1);
       t = sayToplam(g); kalan = stok - t.r - t.d;
       msg = '📦 EKSIK AL! '+ad+' | stok '+stok+', reyon '+t.r+' → '+(stok-t.r)+' adet lazim, alinan '+t.d+(kalan>0 ? ', kalan '+kalan : ' ✅ TAMAM');
       tip='er'; ses=true; titre=[250,100,250,100,250];
     } else {
-      msg = '✋ ALMA, reyon tam: '+ad+' | stok '+stok+', reyon '+t.r+', alinan '+t.d; tip='wn2'; titre=[80]; soz='Alma. Reyon tam';
+      msg = '✋ ALMA, reyon tam: '+ad+' | stok '+stok+', reyon '+t.r+', alinan '+t.d; tip='wn2'; titre=[80]; soz='Alma. Reyon tam'; sozK='alma';
     }
   }
   toast(msg, tip); setTxt('kson', 'DEPO '+msg);
-  konus(soz, tip==='er' ? 650 : 250);
+  konus(soz, tip==='er' ? 650 : 250, sozK);
   if(tip==='er'){ var pg0=document.getElementById('say-liste'); if(pg0){ pg0.className=''; void pg0.offsetWidth; pg0.className='say-ses'; } }
   try{ sesCal(tip==='er' ? 'eksik' : (tip==='wn2' ? 'tamam' : 'ok')); if(titre && navigator.vibrate) navigator.vibrate(titre); }catch(e){}
   sayGonder(); sayRender();
@@ -919,7 +920,7 @@ function sayAdetSor(g, kameradan){
   var eksik = stok - n - t.d;
   var msg, tip;
   if(n>stok){ msg = '⚠️ '+modelAd(g)+': reyonda '+n+', stok '+stok+' → '+(n-stok)+' FAZLA'; tip='wn'; konus((n-stok)+' adet fazla', 450); try{ sesCal('hata'); }catch(e){} }
-  else if(eksik>0){ msg = '⚠️ STOK '+stok+', reyonda '+n+' → '+eksik+' ADET EKSIK, kaydedildi'; tip='er'; konus('Stok '+stok+', reyonda '+n+'. '+eksik+' adet eksik', 650); try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); sesCal('eksik'); }catch(e){} }
+  else if(eksik>0){ msg = '⚠️ STOK '+stok+', reyonda '+n+' → '+eksik+' ADET EKSIK, kaydedildi'; tip='er'; konus('Stok '+stok+', reyonda '+n+'. '+eksik+' adet eksik', 650, 'eksik'); try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); sesCal('eksik'); }catch(e){} }
   else { msg = '✅ Stok '+stok+', reyonda '+n+' → eksik yok, kaydedildi'; tip='ok'; konus('Eksik yok', 450); try{ sesCal('tamam'); }catch(e){} }
   toast(msg, tip); setTxt('kson', 'REYON '+msg);
   sayGonder(); sayRender();
@@ -1149,7 +1150,7 @@ function tekEsle(id){
   var r = TEK[id]; if(!r) return;
   r.durum='ESLESTI'; r.esTarih=new Date().getTime(); r.esCihaz=tekCihaz();
   tekCacheYaz(); tekYaz(r); tekBannerKapat();
-  toast('✅ EŞLENDİ! '+tekAdi(r)+' — tekleme tamam','ok'); konus('Eşlendi', 700);
+  toast('✅ EŞLENDİ! '+tekAdi(r)+' — tekleme tamam','ok'); konus('Eşlendi', 700, 'esle');
   try{ sesCal('tekleme'); if(navigator.vibrate) navigator.vibrate([150,80,150,80,300]); }catch(e){}
   tekRender();
 }
@@ -1164,7 +1165,7 @@ function teklemeKontrol(ean, tekrar){
   var r = b[0];
   var html = '<div style="font-size:15px;font-weight:800">👟 TEKLEME VAR!</div><div style="font-size:14px;margin:4px 0">'+tekAdi(r)+'</div><div style="font-size:13px">'+tekAyakAd(r.ayak)+' ayak kayıtlı, <b>'+tekAyakAd(tekDiger(r.ayak))+'</b> ayak aranıyor'+(b.length>1?' ('+b.length+' kayıt)':'')+'</div><div style="margin-top:8px;display:flex;gap:8px"><button class="say-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="tekEsle(\''+r.id+'\')">✅ '+tekAyakAd(tekDiger(r.ayak))+' ayağı buldum, EŞLE</button><button class="say-btn" onclick="tekBannerKapat()">Kapat</button></div>';
   tekBanner(html);
-  konus('Tekleme var. '+tekAyakAd(tekDiger(r.ayak))+' ayak aranıyor', 900);
+  konus('Tekleme var. '+tekAyakAd(tekDiger(r.ayak))+' ayak aranıyor', 900, 'tekleme');
   try{ toast('👟 TEKLEME VAR! '+tekAdi(r)+' — '+tekAyakAd(tekDiger(r.ayak))+' ayak aranıyor','er'); }catch(e){}
   try{ sesCal('tekleme'); if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
 }
@@ -1254,6 +1255,95 @@ window.addEventListener('load', function(){
   setInterval(function(){ if(!document.hidden) tekYenile(); }, 30000);
 });
 
+// ===== OZEL SES KAYDI (mikrofon, tum cihazlarda ortak) =====
+var SES_LISTE = [
+  ['eksik','Eksik al (depo ve reyon eksik)'],
+  ['alma','Alma, reyon tam'],
+  ['firsat','Fırsat'],
+  ['balkon','Balkon'],
+  ['tekleme','Tekleme var'],
+  ['esle','Eşlendi'],
+  ['yok','Listede yok / reyonda kayıt yok']
+];
+var SES_KAYIT = {};       // anahtar -> data URL
+var SES_BEKLEYEN = {};    // sunucuya gitmemis kayitlar
+var SES_REC = null, SES_PARCA = [], SES_STREAM = null, SES_TMR = null, SES_AKTIF = '';
+try{ var sc0 = localStorage.getItem('SES_CACHE'); if(sc0) SES_KAYIT = JSON.parse(sc0); }catch(e){ SES_KAYIT = {}; }
+function sesCacheYaz(){ try{ localStorage.setItem('SES_CACHE', JSON.stringify(SES_KAYIT)); }catch(e){ toast('⚠️ Ses bu cihazda saklanamadi (yer dolu)','wn'); } }
+function sesYukle(cb){
+  fbGet('sesPelikan', function(st, data){
+    if(st>=200 && st<300){
+      var yeni = {};
+      for(var k in (data||{})){ if(data.hasOwnProperty(k) && data[k] && data[k].d) yeni[k] = data[k].d; }
+      for(var b in SES_BEKLEYEN){ if(SES_BEKLEYEN.hasOwnProperty(b) && SES_KAYIT[b]) yeni[b] = SES_KAYIT[b]; }
+      SES_KAYIT = yeni; sesCacheYaz();
+    }
+    if(typeof cb==='function') cb();
+  });
+}
+function sesOynat(k){
+  if(!SES_KAYIT[k]) return false;
+  try{ var a = new Audio(SES_KAYIT[k]); var p = a.play(); if(p && p.catch) p.catch(function(){}); return true; }catch(e){ return false; }
+}
+function sesDestekVar(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder); }
+function sesKayitDur(){
+  clearTimeout(SES_TMR);
+  try{ if(SES_REC && SES_REC.state!=='inactive') SES_REC.stop(); }catch(e){}
+}
+function sesKayitBasla(k){
+  if(SES_REC){ sesKayitDur(); return; }
+  if(!sesDestekVar()){ toast('⚠️ Bu cihaz ses kaydi desteklemiyor. Telefonda kaydet, burada da calar.','wn'); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    SES_STREAM = stream; SES_PARCA = []; SES_AKTIF = k;
+    var rec = new MediaRecorder(stream); SES_REC = rec;
+    rec.ondataavailable = function(e){ if(e.data && e.data.size>0) SES_PARCA.push(e.data); };
+    rec.onstop = function(){
+      try{ SES_STREAM.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+      var tip = rec.mimeType || 'audio/webm';
+      var blob = new Blob(SES_PARCA, {type: tip});
+      var kk = SES_AKTIF; SES_REC = null; SES_AKTIF = '';
+      var fr = new FileReader();
+      fr.onload = function(){
+        var url = String(fr.result);
+        if(url.length > 220000){ toast('⚠️ Kayit cok uzun, daha kisa soyle','wn'); sesModalCiz(); return; }
+        SES_KAYIT[kk] = url; SES_BEKLEYEN[kk] = true; sesCacheYaz();
+        fbPut('sesPelikan/'+kk, {d:url, t:new Date().getTime()}, function(st){
+          if(st>=200 && st<300){ delete SES_BEKLEYEN[kk]; toast('✅ Ses kaydedildi, tum cihazlara gitti','ok'); }
+          else { toast('❌ Ses gonderilemedi: '+hataMetni(st),'wn'); }
+        });
+        sesModalCiz(); sesOynat(kk);
+      };
+      fr.readAsDataURL(blob);
+    };
+    rec.start();
+    SES_TMR = setTimeout(sesKayitDur, 4500);
+    sesModalCiz();
+  }, function(){ toast('⚠️ Mikrofon izni verilmedi','wn'); });
+}
+function sesSil(k){
+  if(!confirm('Bu kayit silinsin mi? (Bilgisayar sesi kullanilir)')) return;
+  delete SES_KAYIT[k]; delete SES_BEKLEYEN[k]; sesCacheYaz();
+  fbIstek('DELETE', 'sesPelikan/'+k, null, function(st){ if(st<200 || st>=300) toast('❌ '+hataMetni(st),'wn'); });
+  sesModalCiz();
+}
+function sesModalCiz(){
+  var el = document.getElementById('sesIc'); if(!el) return;
+  var h = '';
+  if(!sesDestekVar()) h += '<div style="padding:8px 10px;margin-bottom:10px;border-radius:8px;background:rgba(245,158,11,.15);color:#b45309;font-size:12px;font-weight:700">Bu cihaz mikrofonla kayit desteklemiyor. Telefonda kaydedersen burada da calar.</div>';
+  SES_LISTE.forEach(function(x){
+    var var_ = !!SES_KAYIT[x[0]], kayitta = (SES_AKTIF===x[0]);
+    h += '<div style="display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-weight:700;font-size:14px">'+x[1]+'</div><div style="font-size:11px;color:'+(var_?'#16a34a':'var(--muted)')+'">'+(kayitta ? '🔴 Kayit yapiliyor... bitirmek icin bas' : (var_ ? '✅ Kendi sesin kayitli' : 'Bilgisayar sesi'))+'</div></div>';
+    if(var_ && !kayitta) h += '<button class="say-pm" style="margin:0" onclick="sesOynat(\''+x[0]+'\')">▶</button>';
+    h += '<button class="say-pm" style="margin:0;width:'+(kayitta?'92px':'46px')+(kayitta?';background:#dc2626;color:#fff':'')+'" onclick="sesKayitBasla(\''+x[0]+'\')">'+(kayitta ? '⏹ Bitir' : '🎙')+'</button>';
+    if(var_ && !kayitta) h += '<button class="say-pm" style="margin:0" onclick="sesSil(\''+x[0]+'\')">🗑</button>';
+    h += '</div>';
+  });
+  el.innerHTML = h;
+}
+function sesAyarAc(){ var m = document.getElementById('sesModal'); if(!m) return; m.style.display='block'; sesModalCiz(); sesYukle(sesModalCiz); }
+function sesAyarKapat(){ sesKayitDur(); var m = document.getElementById('sesModal'); if(m) m.style.display='none'; }
+window.addEventListener('load', function(){ setTimeout(function(){ sesYukle(); }, 2000); setInterval(function(){ if(!document.hidden && !SES_REC) sesYukle(); }, 90000); });
+
 // ===== EKSTRA: ayri sesler + ortak Firsat listesi =====
 function sesCal(tur){
   try{
@@ -1320,9 +1410,10 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden) f
 // ---- sesli anons (tarayici destekliyorsa) ----
 var SES_ACIK = true;
 try{ SES_ACIK = localStorage.getItem('SESLI') !== '0'; }catch(e){}
-function konus(metin, gecikme){
+function konus(metin, gecikme, anahtar){
   if(!SES_ACIK || !metin) return;
   setTimeout(function(){
+    try{ if(anahtar && SES_KAYIT[anahtar] && sesOynat(anahtar)) return; }catch(e){}
     try{
       if(!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
       window.speechSynthesis.cancel();
@@ -1541,11 +1632,11 @@ function ekle(k){
   var info=G[g];var toplam=getToplam(g);
   if(toplam<=LIM){
     if(navigator.vibrate)navigator.vibrate([200,100,200,100,200]);
-    sesCal('firsat');konus('Fırsat. '+toplam+' adet kaldı',500);
+    sesCal('firsat');konus('Fırsat. '+toplam+' adet kaldı',500,'firsat');
     toast('🏷️ FIRSAT! '+info.marka+' '+info.ad+' - '+toplam+' adet','er');
   } else if(toplam<=LIM+2){
     if(navigator.vibrate)navigator.vibrate([150,80,150]);
-    sesCal('balkon');konus('Balkon. '+toplam+' adet',400);
+    sesCal('balkon');konus('Balkon. '+toplam+' adet',400,'balkon');
     toast('🟡 BALKON! '+info.marka+' '+info.ad+' - '+toplam+' adet','wn2');
   } else {
     sesCal('ok');
