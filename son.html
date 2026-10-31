@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v16.5</div>
+        <div class="header-sub">PELIKAN v16.6</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -1509,6 +1509,16 @@ function adrRafSil(key, kk){
   toast('🗑 '+key+' rafi silindi','ok');
   adrRender();
 }
+// raf basligindaki 'Urun ekle': rafi aktif yap, ADRESLE moduna gec, barkod kutusuna git
+function adrRafaUrunEkle(key){
+  adrModSec('a');
+  ADR_AKTIF = key; adrAktifYaz();
+  try{ window.scrollTo(0,0); }catch(e){}
+  var bi = document.getElementById('adr-bi'); if(bi){ bi.value=''; bi.focus(); }
+  toast('📥 '+key+' rafi secildi. Simdi urunleri okut','ok');
+  try{ sesCal('ok'); }catch(e){}
+  adrRender();
+}
 function adrKatSec(k){
   ADR_KAT = k;
   var ids = ['H'].concat(ADR_KATLAR.map(function(x){ return x[0]; }));
@@ -1678,8 +1688,8 @@ function adrRender(){
     keys.forEach(function(key){
       var gl = sec[kk][key].sort(function(a,b){ var x=modelAd(a), y=modelAd(b); return x<y?-1:(x>y?1:0); });
       var aktif = (key===ADR_AKTIF && ADR_MOD==='a');
-      html += '<div class="say-marka" style="'+(aktif?'background:#16a34a;color:#fff':'')+'">📍 '+sayEsc(key)+' <span>'+(gl.length ? gl.length+' model' : 'boş raf')+'</span><button class="say-hepsi" style="background:#dc2626" onclick="adrRafSil(\''+key+'\',\''+kk+'\')">🗑 Sil</button></div>';
-      if(!gl.length) html += '<div class="adr-bos">Bu rafa ADRESLE modunda ürün okutarak ekleyebilirsin</div>';
+      html += '<div class="say-marka" style="'+(aktif?'background:#16a34a;color:#fff':'')+'">📍 '+sayEsc(key)+' <span>'+(gl.length ? gl.length+' model' : 'boş raf')+'</span><button class="say-hepsi" style="background:#dc2626" onclick="adrRafSil(\''+key+'\',\''+kk+'\')">🗑 Sil</button><button class="say-hepsi" style="background:#0891b2" onclick="adrRafaUrunEkle(\''+key+'\')">📥 Ürün ekle</button></div>';
+      if(!gl.length) html += '<div class="adr-bos">Boş raf. <b>📥 Ürün ekle</b> butonuna basıp ürünleri okut</div>';
       gl.forEach(function(g){
         if(sayac++ > 160) return;
         var info = G[g], sonMu = (g===ADR_ONE);
