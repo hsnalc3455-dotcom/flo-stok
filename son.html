@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v17.2</div>
+        <div class="header-sub">PELIKAN v17.3</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -516,6 +516,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div id="hz-yazi" style="text-align:center;font-weight:700;font-size:12px;margin-bottom:10px"></div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="hz-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="hzOkut()">EKLE</button></div>
     <button class="kamera-btn" onclick="hzKameraAc()">📷 KAMERA ILE OKUT</button>
+    <div id="hz-son"></div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <div class="stat" style="flex:1"><div class="sn" id="hz-n-top">0</div><div class="sl">Okutulan adet</div></div>
       <div class="stat" style="flex:1"><div class="sn" id="hz-n-cesit">0</div><div class="sl">Cesit</div></div>
@@ -2112,10 +2113,10 @@ function hzOkut(kod){
       var k2 = hzTop(v).kalan;
       msg2 = '📦 EKSIK AL! '+ad+' | '+tp.n+' adet eksik, kalan '+k2+(k2===0 ? ' ✅ TAMAM' : '')+adrEk(b.g);
       tip = 'er'; soz = 'Eksik al.'; sozK = 'eksik';
-      if(k2===0){ delete HZ_SABIT[v]; HZ_ONE = ''; }
+      
       try{ sesCal('eksik'); if(navigator.vibrate) navigator.vibrate([300,100,300,100,300]); }catch(e){}
     } else if(tp.var_){
-      msg2 = '✋ Tamam: '+ad+' eksik listesinde ama hepsi alinmis'; tip = 'wn2'; soz = 'Tamam'; sozK = 'alma'; delete HZ_SABIT[v]; HZ_ONE = '';
+      msg2 = '✋ Tamam: '+ad+' eksik listesinde ama hepsi alinmis'; tip = 'wn2'; soz = 'Tamam'; sozK = 'alma';
       try{ sesCal('tamam'); if(navigator.vibrate) navigator.vibrate(80); }catch(e){}
     } else {
       // ayni modelin baska bedeni eksik mi?
@@ -2143,7 +2144,7 @@ function hzDuz(ean, alan, d){
   HZ_SABIT[ean] = true;
   var mevcut = (HZ_BEN[ean] && HZ_BEN[ean][alan]) ? HZ_BEN[ean][alan] : 0, y = mevcut + d;
   if(y<0){ toast('Bu cihazda dusurulecek yok (baska cihaz okutmus olabilir)','wn'); return; }
-  hzYaz(ean, alan, y); if(alan==='a' && hzTop(ean).kalan===0){ delete HZ_SABIT[ean]; if(HZ_ONE===ean) HZ_ONE=''; }
+  hzYaz(ean, alan, y); 
   hzGonder(); hzRender();
 }
 function hzSil(ean){
@@ -2182,6 +2183,11 @@ function hzRender(){
   var tum = hzHesapla(); HZ_SON_HESAP = tum;
   var top = 0, kal = 0; tum.forEach(function(m){ top += m.n; kal += m.kalan; });
   setTxt('hz-n-top', top); setTxt('hz-n-cesit', tum.length); setTxt('hz-n-kalan', kal);
+  var sonEl = document.getElementById('hz-son');
+  if(sonEl){
+    var sm = null; tum.forEach(function(m){ if(m.e===HZ_ONE) sm = m; });
+    sonEl.innerHTML = sm ? '<div style="font-size:11px;font-weight:800;color:#a16207;margin:0 0 4px 2px">⭐ SON OKUTULAN'+(sm.a>0 ? ' (depodan alindi)' : '')+'</div>'+hzKart(sm) : '';
+  }
   var alinan = tum.filter(function(m){ return m.a>0; }).sort(function(x,y){ return y.t-x.t; });
   var liste = tum.filter(function(m){ return m.a===0 && (HZ_FILTRE==='T' || m.kalan>0 || HZ_SABIT[m.e] || m.e===HZ_ONE); });
   var html = '', one = null;
@@ -2190,7 +2196,6 @@ function hzRender(){
     alinan.slice(0,150).forEach(function(m){ html += hzKart(m); });
   }
   for(var i=0;i<liste.length;i++){ if(liste[i].e===HZ_ONE){ one = liste.splice(i,1)[0]; break; } }
-  if(one) html += hzKart(one);
   var mk = {};
   liste.forEach(function(m){ var k = m.b.marka || '?'; if(!mk[k]) mk[k] = []; mk[k].push(m); });
   Object.keys(mk).sort().forEach(function(k){
