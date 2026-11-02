@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v17.0</div>
+        <div class="header-sub">PELIKAN v17.2</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -2112,9 +2112,10 @@ function hzOkut(kod){
       var k2 = hzTop(v).kalan;
       msg2 = '📦 EKSIK AL! '+ad+' | '+tp.n+' adet eksik, kalan '+k2+(k2===0 ? ' ✅ TAMAM' : '')+adrEk(b.g);
       tip = 'er'; soz = 'Eksik al.'; sozK = 'eksik';
+      if(k2===0){ delete HZ_SABIT[v]; HZ_ONE = ''; }
       try{ sesCal('eksik'); if(navigator.vibrate) navigator.vibrate([300,100,300,100,300]); }catch(e){}
     } else if(tp.var_){
-      msg2 = '✋ Tamam: '+ad+' eksik listesinde ama hepsi alinmis'; tip = 'wn2'; soz = 'Tamam'; sozK = 'alma';
+      msg2 = '✋ Tamam: '+ad+' eksik listesinde ama hepsi alinmis'; tip = 'wn2'; soz = 'Tamam'; sozK = 'alma'; delete HZ_SABIT[v]; HZ_ONE = '';
       try{ sesCal('tamam'); if(navigator.vibrate) navigator.vibrate(80); }catch(e){}
     } else {
       // ayni modelin baska bedeni eksik mi?
@@ -2142,7 +2143,8 @@ function hzDuz(ean, alan, d){
   HZ_SABIT[ean] = true;
   var mevcut = (HZ_BEN[ean] && HZ_BEN[ean][alan]) ? HZ_BEN[ean][alan] : 0, y = mevcut + d;
   if(y<0){ toast('Bu cihazda dusurulecek yok (baska cihaz okutmus olabilir)','wn'); return; }
-  hzYaz(ean, alan, y); hzGonder(); hzRender();
+  hzYaz(ean, alan, y); if(alan==='a' && hzTop(ean).kalan===0){ delete HZ_SABIT[ean]; if(HZ_ONE===ean) HZ_ONE=''; }
+  hzGonder(); hzRender();
 }
 function hzSil(ean){
   var b = hzBilgi(ean);
@@ -2159,7 +2161,7 @@ function hzGeriAl(){
 }
 function hzHesapla(){
   var liste = [];
-  hzTumEan().forEach(function(e){ var t = hzTop(e); if(!t.var_ || (t.n===0 && t.a===0)) return; var b = hzBilgi(e); liste.push({e:e, b:b, n:t.n, a:t.a, kalan:t.kalan}); });
+  hzTumEan().forEach(function(e){ var t = hzTop(e); if(!t.var_ || (t.n===0 && t.a===0)) return; var b = hzBilgi(e); liste.push({e:e, b:b, n:t.n, a:t.a, kalan:t.kalan, t:(HZ_BEN[e]&&HZ_BEN[e].t)||0}); });
   return liste;
 }
 var HZ_SON_HESAP = [];
@@ -2180,8 +2182,13 @@ function hzRender(){
   var tum = hzHesapla(); HZ_SON_HESAP = tum;
   var top = 0, kal = 0; tum.forEach(function(m){ top += m.n; kal += m.kalan; });
   setTxt('hz-n-top', top); setTxt('hz-n-cesit', tum.length); setTxt('hz-n-kalan', kal);
-  var liste = tum.filter(function(m){ return HZ_FILTRE==='T' || m.kalan>0 || HZ_SABIT[m.e] || m.e===HZ_ONE; });
+  var alinan = tum.filter(function(m){ return m.a>0; }).sort(function(x,y){ return y.t-x.t; });
+  var liste = tum.filter(function(m){ return m.a===0 && (HZ_FILTRE==='T' || m.kalan>0 || HZ_SABIT[m.e] || m.e===HZ_ONE); });
   var html = '', one = null;
+  if(alinan.length){
+    html += '<div class="say-marka" style="background:#16a34a;color:#fff">✅ DEPODAN ALINANLAR <span style="color:#fff">'+alinan.length+' kayit</span></div>';
+    alinan.slice(0,150).forEach(function(m){ html += hzKart(m); });
+  }
   for(var i=0;i<liste.length;i++){ if(liste[i].e===HZ_ONE){ one = liste.splice(i,1)[0]; break; } }
   if(one) html += hzKart(one);
   var mk = {};
