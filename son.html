@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v16.6</div>
+        <div class="header-sub">PELIKAN v17.0</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -301,6 +301,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
   <div class="tab" id="tab-sayim" onclick="goTab('sayim',this)" style="color:#0891b2">📋 EKSIK BASMA</div>
   <div class="tab" id="tab-tekleme" onclick="goTab('tekleme',this)" style="color:#d97706">👟 TEKLEME</div>
   <div class="tab" id="tab-adres" onclick="goTab('adres',this)" style="color:#0891b2">📍 DEPO ADRES</div>
+  <div class="tab" id="tab-hizli" onclick="goTab('hizli',this)" style="color:#e11d48">⚡ HIZLI EKSIK</div>
   <div class="tab" id="tab-trend" onclick="goTab('trend',this)" style="color:#8b5cf6">📈 TREND</div>
 </div>
 <div class="pg a" id="pg-home">
@@ -317,6 +318,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
       <div class="home-grid">
         <div class="home-tile" onclick="homeGit('tum')"><div class="ic" style="background:linear-gradient(135deg,#ff8a3d,#ff6000)">📦</div><div class="t">Ürünler</div><div class="b" id="ht-tum"></div></div>
         <div class="home-tile" onclick="homeGit('firsat')"><div class="ic" style="background:linear-gradient(135deg,#ff5d6c,#e11d48)">🏷️</div><div class="t">Fırsat</div><div class="b" id="ht-firsat"></div></div>
+        <div class="home-tile" onclick="homeGit('hizli')"><div class="ic" style="background:linear-gradient(135deg,#fb7185,#e11d48)">⚡</div><div class="t">Hızlı Eksik</div><div class="b" id="ht-hizli"></div></div>
         <div class="home-tile" onclick="homeGit('sayim')"><div class="ic" style="background:linear-gradient(135deg,#34d399,#059669)">📋</div><div class="t">Eksik Basma</div><div class="b" id="ht-sayim"></div></div>
         <div class="home-tile" onclick="homeGit('tekleme')"><div class="ic" style="background:linear-gradient(135deg,#fbbf24,#d97706)">👟</div><div class="t">Tekleme</div><div class="b" id="ht-tekleme"></div></div>
         <div class="home-tile" onclick="homeGit('adres')"><div class="ic" style="background:linear-gradient(135deg,#22d3ee,#0891b2)">📍</div><div class="t">Depo Adres</div><div class="b" id="ht-adres"></div></div>
@@ -503,6 +505,32 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div id="adr-sayi" style="font-size:12px;color:var(--muted);margin-bottom:4px"></div>
     <div id="adr-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Hazir</div>
     <div id="adr-liste"></div>
+  </div>
+</div>
+<div class="pg" id="pg-hizli">
+  <div style="padding:14px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button id="hz-r" class="say-mod a" onclick="hzModSec('r')">⚡ REYON (kaydet)</button>
+      <button id="hz-d" class="say-mod" onclick="hzModSec('d')">📦 DEPO (uyar)</button>
+    </div>
+    <div id="hz-yazi" style="text-align:center;font-weight:700;font-size:12px;margin-bottom:10px"></div>
+    <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="hz-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="hzOkut()">EKLE</button></div>
+    <button class="kamera-btn" onclick="hzKameraAc()">📷 KAMERA ILE OKUT</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="stat" style="flex:1"><div class="sn" id="hz-n-top">0</div><div class="sl">Okutulan adet</div></div>
+      <div class="stat" style="flex:1"><div class="sn" id="hz-n-cesit">0</div><div class="sl">Cesit</div></div>
+      <div class="stat r" style="flex:1"><div class="sn" id="hz-n-kalan">0</div><div class="sl">Kalan eksik</div></div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button id="hz-fe" class="say-f a" onclick="hzFiltre('E')">Eksikler</button>
+      <button id="hz-ft" class="say-f" onclick="hzFiltre('T')">Hepsi</button>
+      <button class="say-f" onclick="hzGeriAl()">↩️</button>
+      <button class="say-f" onclick="hzYenile()">🔄</button>
+      <button class="say-f" onclick="hzExcel()">📥 Excel</button>
+    </div>
+    <div id="hz-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Hazir</div>
+    <div id="hz-liste"></div>
+    <button class="rb" onclick="hzYeni()">🆕 Yeni liste baslat (sifirla)</button>
   </div>
 </div>
 <div class="pg" id="pg-trend">
@@ -1910,7 +1938,7 @@ function sesliDegistir(){
 window.addEventListener('load', function(){ var b = document.getElementById('ses-btn'); if(b) b.textContent = SES_ACIK ? '🔊' : '🔇'; });
 
 // ===== ANA SAYFA (yeni gorunum) =====
-var HOME_BASLIK = {home:'Ana Sayfa', tum:'Ürünler', firsat:'Fırsat', degisim:'Stok Takip', hareketsiz:'Hareketsiz', trend:'Trend', sayim:'Eksik Basma', tekleme:'Tekleme', adres:'Depo Adres'};
+var HOME_BASLIK = {hizli:'Hızlı Eksik Basma', home:'Ana Sayfa', tum:'Ürünler', firsat:'Fırsat', degisim:'Stok Takip', hareketsiz:'Hareketsiz', trend:'Trend', sayim:'Eksik Basma', tekleme:'Tekleme', adres:'Depo Adres'};
 var HOME_TMR = null, HOME_ARA_TMR = null;
 var KLASIK = false;
 try{ KLASIK = localStorage.getItem('KLASIK')==='1'; }catch(e){}
@@ -2010,6 +2038,210 @@ window.addEventListener('load', function(){
   if(a) a.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.keyCode===13){ if(e.preventDefault) e.preventDefault(); clearTimeout(HOME_ARA_TMR); homeAra(); } });
   homeRender(); homeGoTab('home'); uiUygula();
   setInterval(function(){ var p=document.getElementById('pg-home'); if(p && p.className.indexOf(' a')>-1 && !document.hidden && !document.getElementById('home-ara').value) homeRender(); }, 8000);
+});
+
+// ===== HIZLI EKSIK BASMA: okuttugun her seyi sorusuz kaydet, depoda eksik ise uyar =====
+var HZ_TUR = '0', HZ_MOD = 'r', HZ_FILTRE = 'E';
+var HZ_BEN = {};            // bu cihaz: ean -> {n:eksik adet, a:depodan alinan, t:son, z:ilk}
+var HZ_HEPSI = {};          // tum cihazlar: cihaz -> {ean:{...}}
+var HZ_ONE = '', HZ_SABIT = {}, HZ_TMR = null, HZ_SON = [];
+function hzLoad(){
+  try{ var t = localStorage.getItem('HZL_TUR'); if(t) HZ_TUR = t; var b = localStorage.getItem('HZL_BEN_'+HZ_TUR); HZ_BEN = b ? JSON.parse(b) : {}; }catch(e){ HZ_BEN = {}; }
+}
+function hzKaydet(){ try{ localStorage.setItem('HZL_TUR', HZ_TUR); localStorage.setItem('HZL_BEN_'+HZ_TUR, JSON.stringify(HZ_BEN)); }catch(e){} }
+function hzGonder(){
+  hzKaydet(); clearTimeout(HZ_TMR);
+  HZ_TMR = setTimeout(function(){
+    fbPut('hizliPelikan/'+HZ_TUR+'/'+CIHAZ, HZ_BEN, function(st){
+      if(st<200 || st>=300) setTxt('hz-durum','🔴 Gonderilemedi: '+hataMetni(st));
+      else setTxt('hz-durum','🟢 Senkron ('+new Date().toLocaleTimeString('tr-TR')+')');
+    });
+  }, 600);
+}
+function hzTop(ean){
+  var n = 0, a = 0, var_ = false;
+  function ekle(x){ if(x){ n += x.n||0; a += x.a||0; var_ = true; } }
+  for(var c in HZ_HEPSI){ if(HZ_HEPSI.hasOwnProperty(c) && c!==CIHAZ && HZ_HEPSI[c]) ekle(HZ_HEPSI[c][ean]); }
+  ekle(HZ_BEN[ean]);
+  return {n:n, a:a, kalan:Math.max(0, n-a), var_:var_};
+}
+function hzBilgi(ean){
+  var g = D[ean], info = g ? G[g] : null, beden = '?', stok = 0;
+  if(info){ for(var i=0;i<info.bedenler.length;i++){ if(info.bedenler[i].ean===ean){ beden = info.bedenler[i].beden; stok = info.bedenler[i].stok; } } }
+  return {g:g||'', marka: info ? info.marka : 'STOKTA YOK', ad: info ? info.ad : ('EAN '+ean), beden:beden, stok:stok, bilinen:!!info, kat: info ? (info.kat||'') : ''};
+}
+function hzYaz(ean, alan, deger){
+  if(!HZ_BEN[ean]) HZ_BEN[ean] = {n:0, a:0};
+  if(!HZ_BEN[ean].z) HZ_BEN[ean].z = new Date().getTime();
+  HZ_BEN[ean][alan] = deger; HZ_BEN[ean].t = new Date().getTime();
+}
+function hzModSec(m){
+  HZ_MOD = m; HZ_SABIT = {};
+  var r=document.getElementById('hz-r'), d=document.getElementById('hz-d');
+  if(r) r.className='say-mod'+(m==='r'?' a':''); if(d) d.className='say-mod'+(m==='d'?' a':'');
+  setTxt('hz-yazi', m==='r' ? 'REYON: okuttugun her sey sorusuz kaydolur' : 'DEPO: okut, eksik listesindeyse titrer ve uyarir');
+  var bi=document.getElementById('hz-bi'); if(bi) bi.focus();
+  hzRender();
+}
+function hzFiltre(f){
+  HZ_FILTRE = f; HZ_SABIT = {};
+  var e=document.getElementById('hz-fe'), t=document.getElementById('hz-ft');
+  if(e) e.className='say-f'+(f==='E'?' a':''); if(t) t.className='say-f'+(f==='T'?' a':'');
+  hzRender();
+}
+function hzOkut(kod){
+  var v = (kod!==undefined) ? String(kod) : document.getElementById('hz-bi').value.replace(/\s/g,'');
+  if(kod===undefined){ var bi=document.getElementById('hz-bi'); bi.value=''; bi.focus(); }
+  if(!v) return;
+  try{ teklemeKontrol(v); }catch(e){}
+  var b = hzBilgi(v), ad = b.marka+' '+b.ad+' ('+b.beden+')';
+  HZ_ONE = v; HZ_SABIT[v] = true;
+  if(HZ_MOD==='r'){
+    var n = (HZ_BEN[v] && HZ_BEN[v].n ? HZ_BEN[v].n : 0) + 1;
+    hzYaz(v, 'n', n);
+    HZ_SON.push({e:v, alan:'n'});
+    var t = hzTop(v);
+    var msg = '⚡ Kaydedildi: '+ad+' | listede '+t.n+' adet'+(b.bilinen ? '' : ' (stokta yok)');
+    toast(msg, b.bilinen ? 'ok' : 'wn'); setTxt('kson', msg);
+    try{ sesCal('ok'); if(navigator.vibrate) navigator.vibrate(40); }catch(e){}
+  } else {
+    var tp = hzTop(v), msg2, tip, soz = '', sozK = '';
+    if(tp.var_ && tp.kalan>0){
+      hzYaz(v, 'a', (HZ_BEN[v] && HZ_BEN[v].a ? HZ_BEN[v].a : 0) + 1);
+      HZ_SON.push({e:v, alan:'a'});
+      var k2 = hzTop(v).kalan;
+      msg2 = '📦 EKSIK AL! '+ad+' | '+tp.n+' adet eksik, kalan '+k2+(k2===0 ? ' ✅ TAMAM' : '')+adrEk(b.g);
+      tip = 'er'; soz = 'Eksik al.'; sozK = 'eksik';
+      try{ sesCal('eksik'); if(navigator.vibrate) navigator.vibrate([300,100,300,100,300]); }catch(e){}
+    } else if(tp.var_){
+      msg2 = '✋ Tamam: '+ad+' eksik listesinde ama hepsi alinmis'; tip = 'wn2'; soz = 'Tamam'; sozK = 'alma';
+      try{ sesCal('tamam'); if(navigator.vibrate) navigator.vibrate(80); }catch(e){}
+    } else {
+      // ayni modelin baska bedeni eksik mi?
+      var diger = [];
+      if(b.g){ var tumE = hzTumEan(); for(var i=0;i<tumE.length;i++){ var e2 = tumE[i]; if(e2!==v && D[e2]===b.g){ var t2 = hzTop(e2); if(t2.kalan>0) diger.push(hzBilgi(e2).beden+' ('+t2.kalan+')'); } } }
+      if(diger.length){
+        msg2 = '⚠️ Bu beden listede yok ama ayni modelin baska bedeni eksik: '+diger.join(', ')+' | '+b.marka+' '+b.ad; tip = 'wn'; soz = 'Başka beden eksik';
+        try{ sesCal('balkon'); if(navigator.vibrate) navigator.vibrate([150,80,150]); }catch(e){}
+      } else {
+        msg2 = 'ℹ️ Eksik listesinde yok: '+ad; tip = 'wn2'; soz = '';
+        try{ sesCal('ok'); }catch(e){}
+      }
+    }
+    toast(msg2, tip); setTxt('kson', msg2);
+    konus(soz, 500, sozK);
+  }
+  hzGonder(); hzRender();
+}
+function hzTumEan(){
+  var o = {}; for(var e in HZ_BEN){ if(HZ_BEN.hasOwnProperty(e)) o[e]=1; }
+  for(var c in HZ_HEPSI){ if(HZ_HEPSI.hasOwnProperty(c) && c!==CIHAZ && HZ_HEPSI[c]){ for(var e2 in HZ_HEPSI[c]){ if(HZ_HEPSI[c].hasOwnProperty(e2)) o[e2]=1; } } }
+  return Object.keys(o);
+}
+function hzDuz(ean, alan, d){
+  HZ_SABIT[ean] = true;
+  var mevcut = (HZ_BEN[ean] && HZ_BEN[ean][alan]) ? HZ_BEN[ean][alan] : 0, y = mevcut + d;
+  if(y<0){ toast('Bu cihazda dusurulecek yok (baska cihaz okutmus olabilir)','wn'); return; }
+  hzYaz(ean, alan, y); hzGonder(); hzRender();
+}
+function hzSil(ean){
+  var b = hzBilgi(ean);
+  if(!confirm('Bu kayit silinsin mi?\n'+b.marka+' '+b.ad+' ('+b.beden+')')) return;
+  if(HZ_BEN[ean]) delete HZ_BEN[ean];
+  hzGonder(); hzRender();
+  if(HZ_HEPSI && Object.keys(HZ_HEPSI).length>1) toast('Not: baska cihazdaki kayit o cihazdan silinmeli','wn');
+}
+function hzGeriAl(){
+  var s = HZ_SON.pop();
+  if(!s){ toast('Geri alinacak okutma yok','wn'); return; }
+  if(HZ_BEN[s.e]) HZ_BEN[s.e][s.alan] = Math.max(0, (HZ_BEN[s.e][s.alan]||0) - 1);
+  toast('↩️ Son okutma geri alindi','ok'); hzGonder(); hzRender();
+}
+function hzHesapla(){
+  var liste = [];
+  hzTumEan().forEach(function(e){ var t = hzTop(e); if(!t.var_ || (t.n===0 && t.a===0)) return; var b = hzBilgi(e); liste.push({e:e, b:b, n:t.n, a:t.a, kalan:t.kalan}); });
+  return liste;
+}
+var HZ_SON_HESAP = [];
+function hzKart(m){
+  var sonMu = (m.e===HZ_ONE), renk = m.kalan>0 ? '#ef4444' : '#22c55e';
+  var h = '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;background:var(--surface);border:1px solid var(--border);border-left:5px solid '+renk+';border-radius:10px'+(sonMu?';box-shadow:0 0 0 2px #facc15;background:rgba(250,204,21,.10)':'')+'">';
+  h += '<div style="min-width:46px;text-align:center"><div style="font-size:10px;color:var(--muted)">Beden</div><div style="font-size:20px;font-weight:800">'+sayEsc(m.b.beden)+'</div></div>';
+  h += '<div style="flex:1;min-width:0">'+(sonMu?'<div style="font-size:10px;font-weight:800;color:#a16207">⭐ SON OKUTULAN</div>':'')+'<div style="font-size:11px;color:var(--muted);font-weight:700">'+sayEsc(m.b.marka)+'</div><div style="font-size:14px;font-weight:700">'+sayEsc(m.b.ad)+'</div><div style="font-size:11px;color:var(--muted)">'+m.e+(m.b.bilinen ? ' · stok '+m.b.stok : '')+'</div>'+adrEtiketHtml(m.b.g)+'</div>';
+  h += '<div style="text-align:center;min-width:44px"><div style="font-size:10px;color:var(--muted)">Eksik</div><div style="font-size:20px;font-weight:800;color:'+(m.kalan>0?'#dc2626':'#16a34a')+'">'+m.kalan+'</div><div style="font-size:10px;color:var(--muted)">'+m.n+' / alinan '+m.a+'</div></div>';
+  h += '<div style="display:flex;flex-direction:column;gap:4px">';
+  if(HZ_MOD==='r') h += '<div><button class="say-pm" style="margin:0 2px 0 0;width:38px;height:36px" onclick="hzDuz(\''+m.e+'\',\'n\',-1)">−</button><button class="say-pm" style="margin:0;width:38px;height:36px" onclick="hzDuz(\''+m.e+'\',\'n\',1)">+</button></div>';
+  else h += '<div><button class="say-pm" style="margin:0 2px 0 0;width:38px;height:36px" onclick="hzDuz(\''+m.e+'\',\'a\',-1)">−</button><button class="say-pm" style="margin:0;width:38px;height:36px;background:#16a34a;color:#fff" onclick="hzDuz(\''+m.e+'\',\'a\',1)">✓</button></div>';
+  h += '<button class="say-pm" style="margin:0;width:80px;height:30px;font-size:13px" onclick="hzSil(\''+m.e+'\')">🗑</button></div></div>';
+  return h;
+}
+function hzRender(){
+  var el = document.getElementById('hz-liste'); if(!el) return;
+  var tum = hzHesapla(); HZ_SON_HESAP = tum;
+  var top = 0, kal = 0; tum.forEach(function(m){ top += m.n; kal += m.kalan; });
+  setTxt('hz-n-top', top); setTxt('hz-n-cesit', tum.length); setTxt('hz-n-kalan', kal);
+  var liste = tum.filter(function(m){ return HZ_FILTRE==='T' || m.kalan>0 || HZ_SABIT[m.e] || m.e===HZ_ONE; });
+  var html = '', one = null;
+  for(var i=0;i<liste.length;i++){ if(liste[i].e===HZ_ONE){ one = liste.splice(i,1)[0]; break; } }
+  if(one) html += hzKart(one);
+  var mk = {};
+  liste.forEach(function(m){ var k = m.b.marka || '?'; if(!mk[k]) mk[k] = []; mk[k].push(m); });
+  Object.keys(mk).sort().forEach(function(k){
+    var ms = mk[k].sort(function(a,b){ var x = a.b.ad+' '+('000'+a.b.beden).slice(-5), y = b.b.ad+' '+('000'+b.b.beden).slice(-5); return x<y?-1:(x>y?1:0); });
+    var ea = 0; ms.forEach(function(m){ ea += m.kalan; });
+    html += '<div class="say-marka">'+sayEsc(k)+' <span>'+ms.length+' kayit'+(ea>0 ? ' · '+ea+' adet eksik' : '')+'</span></div>';
+    ms.slice(0,150).forEach(function(m){ html += hzKart(m); });
+  });
+  if(!html) html = '<div class="empty"><span>⚡</span><p>'+(HZ_FILTRE==='E' ? 'Eksik kayit yok. Reyonda ürünleri okut, hepsi buraya kaydolur.' : 'Henüz kayıt yok.')+'</p></div>';
+  el.innerHTML = html;
+}
+function hzYenile(){
+  fbGet('hizliMetaPelikan', function(st, meta){
+    if(st>=200 && st<300 && meta && meta.tur && String(meta.tur)!==HZ_TUR){
+      HZ_TUR = String(meta.tur); HZ_BEN = {}; HZ_HEPSI = {}; HZ_ONE = '';
+      try{ var b = localStorage.getItem('HZL_BEN_'+HZ_TUR); if(b) HZ_BEN = JSON.parse(b); }catch(e){}
+      hzKaydet();
+    }
+    fbGet('hizliPelikan/'+HZ_TUR, function(st2, data){
+      if(st2>=200 && st2<300){ HZ_HEPSI = data || {}; setTxt('hz-durum','🟢 Senkron ('+new Date().toLocaleTimeString('tr-TR')+')'); }
+      else setTxt('hz-durum','🔴 '+hataMetni(st2));
+      hzRender();
+    });
+  });
+}
+function hzYeni(){
+  if(!confirm('YENI LISTE baslatilsin mi? Tum cihazlardaki hizli eksik listesi sifirlanir.')) return;
+  var tur = String(new Date().getTime());
+  fbPut('hizliMetaPelikan', {tur:tur}, function(st){
+    if(st<200 || st>=300){ toast('❌ '+hataMetni(st),'wn'); return; }
+    HZ_TUR = tur; HZ_BEN = {}; HZ_HEPSI = {}; HZ_ONE = ''; HZ_SABIT = {}; HZ_SON = [];
+    hzKaydet(); hzRender(); toast('🆕 Yeni liste basladi','ok');
+  });
+}
+function hzExcel(){
+  var tum = HZ_SON_HESAP.length ? HZ_SON_HESAP : hzHesapla();
+  if(!tum.length){ toast('⚠️ Kayit yok','wn'); return; }
+  function sirala(a,b){ var x=a.b.marka+' '+a.b.ad+' '+a.b.beden, y=b.b.marka+' '+b.b.ad+' '+b.b.beden; return x<y?-1:(x>y?1:0); }
+  var wb = XLSX.utils.book_new();
+  function sayfa(ad, filtre){
+    var rows = [['MARKA','MODEL','GENERIC','BEDEN','EAN','EKSIK ADET','ALINAN','KALAN','STOK','RAF']];
+    tum.filter(filtre).sort(sirala).forEach(function(m){ rows.push([m.b.marka, m.b.ad, m.b.g, m.b.beden, m.e, m.n, m.a, m.kalan, m.b.stok, (typeof adrListe==='function' && m.b.g) ? adrListe(m.b.g).join(', ') : '']); });
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:16},{wch:30},{wch:12},{wch:8},{wch:16},{wch:10},{wch:8},{wch:8},{wch:8},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, ad);
+  }
+  sayfa('EKSIK', function(m){ return m.kalan>0; });
+  sayfa('TUMU', function(){ return true; });
+  XLSX.writeFile(wb, 'HizliEksik_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('📥 Rapor indirildi','ok');
+}
+function hzKameraAc(){ kameraAc('hizli'); }
+hzLoad();
+window.addEventListener('load', function(){
+  var bi = document.getElementById('hz-bi');
+  if(bi) bi.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.keyCode===13){ if(e.preventDefault) e.preventDefault(); hzOkut(); } });
+  hzModSec('r'); hzRender(); setTimeout(hzYenile, 1500);
+  setInterval(function(){ var p=document.getElementById('pg-hizli'); if(p && p.className.indexOf(' a')>-1 && !document.hidden) hzYenile(); }, 15000);
 });
 
 var stream=null;var detector=null;var animFrame=null;var taramaAktif=false;
@@ -2271,6 +2503,7 @@ function goTab(id,el){
   if(id==='degisim'){renderDegisim();farkCek();}
   if(id==='hareketsiz'){renderHareketsiz();farkCek();}
   if(id==='trend')renderTrend();
+  if(id==='hizli'){hzRender();hzYenile();document.getElementById('hz-bi').focus();}
   if(id==='adres'){adrRender();adrYenile();document.getElementById('adr-bi').focus();}
   if(id==='tekleme'){tekRender();tekYenile();document.getElementById('tek-bi').focus();}
   if(id==='sayim'){sayRender();sayYenile();document.getElementById('say-bi').focus();}
@@ -2281,6 +2514,7 @@ function kameraSonucIsle(kod){
   if(KAMERA_KAYNAK==='sayim'){sayimEkle(kod);return;}
   if(KAMERA_KAYNAK==='tekleme'){tekOkut(kod);return;}
   if(KAMERA_KAYNAK==='adres'){adrOkut(kod);return;}
+  if(KAMERA_KAYNAK==='hizli'){hzOkut(kod);return;}
   ekle(kod);
 }
 function kameraAc(kaynak){
