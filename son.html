@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v17.3</div>
+        <div class="header-sub">PELIKAN v17.4</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -2045,7 +2045,7 @@ window.addEventListener('load', function(){
 var HZ_TUR = '0', HZ_MOD = 'r', HZ_FILTRE = 'E';
 var HZ_BEN = {};            // bu cihaz: ean -> {n:eksik adet, a:depodan alinan, t:son, z:ilk}
 var HZ_HEPSI = {};          // tum cihazlar: cihaz -> {ean:{...}}
-var HZ_ONE = '', HZ_SABIT = {}, HZ_TMR = null, HZ_SON = [];
+var HZ_SONMSG = null, HZ_ONE = '', HZ_SABIT = {}, HZ_TMR = null, HZ_SON = [];
 function hzLoad(){
   try{ var t = localStorage.getItem('HZL_TUR'); if(t) HZ_TUR = t; var b = localStorage.getItem('HZL_BEN_'+HZ_TUR); HZ_BEN = b ? JSON.parse(b) : {}; }catch(e){ HZ_BEN = {}; }
 }
@@ -2103,6 +2103,7 @@ function hzOkut(kod){
     HZ_SON.push({e:v, alan:'n'});
     var t = hzTop(v);
     var msg = '⚡ Kaydedildi: '+ad+' | listede '+t.n+' adet'+(b.bilinen ? '' : ' (stokta yok)');
+    HZ_SONMSG = {m:msg, t:(b.bilinen ? 'ok' : 'wn')};
     toast(msg, b.bilinen ? 'ok' : 'wn'); setTxt('kson', msg);
     try{ sesCal('ok'); if(navigator.vibrate) navigator.vibrate(40); }catch(e){}
   } else {
@@ -2130,6 +2131,7 @@ function hzOkut(kod){
         try{ sesCal('ok'); }catch(e){}
       }
     }
+    HZ_SONMSG = {m:msg2, t:tip};
     toast(msg2, tip); setTxt('kson', msg2);
     konus(soz, 500, sozK);
   }
@@ -2186,7 +2188,12 @@ function hzRender(){
   var sonEl = document.getElementById('hz-son');
   if(sonEl){
     var sm = null; tum.forEach(function(m){ if(m.e===HZ_ONE) sm = m; });
-    sonEl.innerHTML = sm ? '<div style="font-size:11px;font-weight:800;color:#a16207;margin:0 0 4px 2px">⭐ SON OKUTULAN'+(sm.a>0 ? ' (depodan alindi)' : '')+'</div>'+hzKart(sm) : '';
+    var bx = '';
+    if(HZ_SONMSG){
+      var rk = HZ_SONMSG.t==='er' ? '#dc2626' : (HZ_SONMSG.t==='ok' ? '#16a34a' : '#d97706');
+      bx = '<div style="background:'+rk+';color:#fff;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-weight:700;font-size:14px;line-height:1.3">'+sayEsc(HZ_SONMSG.m)+'</div>';
+    }
+    sonEl.innerHTML = bx + (sm ? '<div style="font-size:11px;font-weight:800;color:#a16207;margin:0 0 4px 2px">⭐ SON OKUTULAN'+(sm.a>0 ? ' (depodan alindi)' : '')+'</div>'+hzKart(sm) : '');
   }
   var alinan = tum.filter(function(m){ return m.a>0; }).sort(function(x,y){ return y.t-x.t; });
   var liste = tum.filter(function(m){ return m.a===0 && (HZ_FILTRE==='T' || m.kalan>0 || HZ_SABIT[m.e] || m.e===HZ_ONE); });
