@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v17.4</div>
+        <div class="header-sub">PELIKAN v18.1</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -302,6 +302,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
   <div class="tab" id="tab-tekleme" onclick="goTab('tekleme',this)" style="color:#d97706">👟 TEKLEME</div>
   <div class="tab" id="tab-adres" onclick="goTab('adres',this)" style="color:#0891b2">📍 DEPO ADRES</div>
   <div class="tab" id="tab-hizli" onclick="goTab('hizli',this)" style="color:#e11d48">⚡ HIZLI EKSIK</div>
+  <div class="tab" id="tab-toplu" onclick="goTab('toplu',this)" style="color:#0891b2">📋 TOPLU EAN</div>
   <div class="tab" id="tab-trend" onclick="goTab('trend',this)" style="color:#8b5cf6">📈 TREND</div>
 </div>
 <div class="pg a" id="pg-home">
@@ -319,6 +320,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
         <div class="home-tile" onclick="homeGit('tum')"><div class="ic" style="background:linear-gradient(135deg,#ff8a3d,#ff6000)">📦</div><div class="t">Ürünler</div><div class="b" id="ht-tum"></div></div>
         <div class="home-tile" onclick="homeGit('firsat')"><div class="ic" style="background:linear-gradient(135deg,#ff5d6c,#e11d48)">🏷️</div><div class="t">Fırsat</div><div class="b" id="ht-firsat"></div></div>
         <div class="home-tile" onclick="homeGit('hizli')"><div class="ic" style="background:linear-gradient(135deg,#fb7185,#e11d48)">⚡</div><div class="t">Hızlı Eksik</div><div class="b" id="ht-hizli"></div></div>
+        <div class="home-tile" onclick="homeGit('toplu')"><div class="ic" style="background:linear-gradient(135deg,#22d3ee,#0891b2)">📋</div><div class="t">Toplu EAN</div><div class="b" id="ht-toplu"></div></div>
         <div class="home-tile" onclick="homeGit('sayim')"><div class="ic" style="background:linear-gradient(135deg,#34d399,#059669)">📋</div><div class="t">Eksik Basma</div><div class="b" id="ht-sayim"></div></div>
         <div class="home-tile" onclick="homeGit('tekleme')"><div class="ic" style="background:linear-gradient(135deg,#fbbf24,#d97706)">👟</div><div class="t">Tekleme</div><div class="b" id="ht-tekleme"></div></div>
         <div class="home-tile" onclick="homeGit('adres')"><div class="ic" style="background:linear-gradient(135deg,#22d3ee,#0891b2)">📍</div><div class="t">Depo Adres</div><div class="b" id="ht-adres"></div></div>
@@ -507,6 +509,36 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div id="adr-liste"></div>
   </div>
 </div>
+<div class="pg" id="pg-toplu">
+  <div style="padding:14px">
+    <div style="font-weight:800;font-size:15px;margin-bottom:4px">📋 Toplu EAN listesi</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">SAP'taki tekleme EAN kodlarini alt alta yapistir (EAN'in yanina model/beden notu yazabilirsin). Liste tum cihazlarda ortak olur; urunu okutunca "bulundu" olarak isaretlenir.</div>
+    <textarea id="tp-ta" rows="6" placeholder="EAN kodlarini yapistir (alt alta). Istersen EAN yanina not yaz: 8852595566 NIKE 40" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:8px"></textarea>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button class="eb" style="flex:1" onclick="tpEkle()">➕ LISTEYE EKLE</button>
+      <button class="say-f" onclick="tpTemizleKutu()">Kutuyu temizle</button>
+    </div>
+    <div id="tp-ozet" style="font-size:12px;font-weight:700;margin-bottom:12px;min-height:16px"></div>
+    <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tp-bi" placeholder="Urunu okut: bulundu isaretle..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="tpOkut()">OKUT</button></div>
+    <button class="kamera-btn" onclick="tpKameraAc()">📷 KAMERA ILE OKUT</button>
+    <div id="tp-son"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="stat" style="flex:1"><div class="sn" id="tp-n-top">0</div><div class="sl">Listede</div></div>
+      <div class="stat" style="flex:1"><div class="sn" id="tp-n-bul">0</div><div class="sl">Bulundu</div></div>
+      <div class="stat r" style="flex:1"><div class="sn" id="tp-n-kal">0</div><div class="sl">Aranacak</div></div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <button id="tp-fa" class="say-f a" onclick="tpFiltre('A')">Aranacak</button>
+      <button id="tp-fb" class="say-f" onclick="tpFiltre('B')">Bulundu</button>
+      <button id="tp-ft" class="say-f" onclick="tpFiltre('T')">Hepsi</button>
+      <button class="say-f" onclick="tpYenile()">🔄</button>
+      <button class="say-f" onclick="tpExcel()">📥 Excel</button>
+    </div>
+    <div id="tp-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Hazir</div>
+    <div id="tp-liste"></div>
+    <button class="rb" onclick="tpSifirla()">🗑 Listeyi tamamen temizle</button>
+  </div>
+</div>
 <div class="pg" id="pg-hizli">
   <div style="padding:14px">
     <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -631,7 +663,7 @@ function fbIstek(yontem, yol, govde, cb){
       cb(xhr.status, veri);
     };
     xhr.ontimeout = function(){ if(!bitti){ bitti = true; cb(0, null); } };
-    if(yontem==='PUT') xhr.send(JSON.stringify(govde)); else xhr.send();
+    if(yontem==='PUT' || yontem==='PATCH') xhr.send(JSON.stringify(govde)); else xhr.send();
   }catch(e){ if(!bitti){ bitti = true; cb(0, null); } }
 }
 function fbGet(yol, cb){ fbIstek('GET', yol, null, cb); }
@@ -1939,7 +1971,7 @@ function sesliDegistir(){
 window.addEventListener('load', function(){ var b = document.getElementById('ses-btn'); if(b) b.textContent = SES_ACIK ? '🔊' : '🔇'; });
 
 // ===== ANA SAYFA (yeni gorunum) =====
-var HOME_BASLIK = {hizli:'Hızlı Eksik Basma', home:'Ana Sayfa', tum:'Ürünler', firsat:'Fırsat', degisim:'Stok Takip', hareketsiz:'Hareketsiz', trend:'Trend', sayim:'Eksik Basma', tekleme:'Tekleme', adres:'Depo Adres'};
+var HOME_BASLIK = {toplu:'Toplu EAN', hizli:'Hızlı Eksik Basma', home:'Ana Sayfa', tum:'Ürünler', firsat:'Fırsat', degisim:'Stok Takip', hareketsiz:'Hareketsiz', trend:'Trend', sayim:'Eksik Basma', tekleme:'Tekleme', adres:'Depo Adres'};
 var HOME_TMR = null, HOME_ARA_TMR = null;
 var KLASIK = false;
 try{ KLASIK = localStorage.getItem('KLASIK')==='1'; }catch(e){}
@@ -2263,6 +2295,164 @@ window.addEventListener('load', function(){
   setInterval(function(){ var p=document.getElementById('pg-hizli'); if(p && p.className.indexOf(' a')>-1 && !document.hidden) hzYenile(); }, 15000);
 });
 
+// ===== TOPLU EAN: SAP tekleme listesi, yapistir + okutunca bulundu =====
+var TP = {}, TP_FILTRE = 'A', TP_ONE = '', TP_MSG = null, TP_BEKLE = 0;
+function tpLoad(){ try{ var s = localStorage.getItem('TP_CACHE'); if(s) TP = JSON.parse(s) || {}; }catch(e){ TP = {}; } }
+function tpKaydet(){ try{ localStorage.setItem('TP_CACHE', JSON.stringify(TP)); }catch(e){} }
+function tpBilgi(ean){
+  var g = D[ean], info = g ? G[g] : null, beden = '—', stok = 0;
+  if(info){ for(var i=0;i<info.bedenler.length;i++){ if(info.bedenler[i].ean===ean){ beden = info.bedenler[i].beden; stok = info.bedenler[i].stok; } } }
+  var nt = (TP[ean] && TP[ean].n) ? TP[ean].n : '';
+  return {g:g||'', marka: info ? info.marka : 'SAP LISTESI (stok dosyasinda yok)', ad: info ? info.ad : (nt || 'Bilgi yok'), beden:beden, stok:stok, bilinen:!!info};
+}
+function tpAyikla(metin){
+  var satirlar = String(metin).split(/\r?\n/), gor = {}, liste = [];
+  for(var i=0;i<satirlar.length;i++){
+    var tk = satirlar[i].match(/\d{8,14}/g);
+    if(!tk) continue;
+    var not = '';
+    if(tk.length===1){ not = satirlar[i].replace(tk[0], ' ').replace(/^[\s,;:|\-\t]+|[\s,;:|\-\t]+$/g, '').replace(/\s+/g, ' ').slice(0, 80); }
+    for(var j=0;j<tk.length;j++){ if(!gor[tk[j]]){ gor[tk[j]] = 1; liste.push({e:tk[j], n:(tk.length===1 ? not : '')}); } else if(not && tk.length===1){ for(var q=0;q<liste.length;q++){ if(liste[q].e===tk[j] && !liste[q].n) liste[q].n = not; } } }
+  }
+  return liste;
+}
+function tpTemizleKutu(){ var t = document.getElementById('tp-ta'); if(t) t.value = ''; setTxt('tp-ozet',''); }
+function tpEkle(){
+  var t = document.getElementById('tp-ta'), liste = tpAyikla(t.value);
+  if(!liste.length){ setTxt('tp-ozet','⚠️ Gecerli EAN kodu bulunamadi (8-14 haneli sayi)'); return; }
+  var yeni = {}, n = 0, var_ = 0, now = new Date().getTime();
+  for(var i=0;i<liste.length;i++){ var e = liste[i].e, nt = liste[i].n; if(TP[e]){ var_++; if(nt && !TP[e].n){ TP[e].n = nt; yeni[e] = TP[e]; } continue; } yeni[e] = nt ? {t:now, n:nt} : {t:now}; TP[e] = yeni[e]; n++; }
+  tpKaydet(); tpRender();
+  setTxt('tp-ozet', '✅ '+liste.length+' kod okundu: '+n+' yeni eklendi'+(var_ ? ', '+var_+' zaten listede' : ''));
+  if(!n && !Object.keys(yeni).length){ return; }
+  TP_BEKLE++;
+  fbIstek('PATCH', 'sapListePelikan', yeni, function(st){
+    TP_BEKLE--;
+    if(st<200 || st>=300){ setTxt('tp-durum','🔴 Gonderilemedi: '+hataMetni(st)+' (liste telefonda saklandi)'); }
+    else { setTxt('tp-durum','🟢 Senkron ('+new Date().toLocaleTimeString('tr-TR')+')'); t.value = ''; }
+  });
+}
+function tpBulundu(ean, geri){
+  var now = new Date().getTime();
+  if(!TP[ean]) return;
+  if(geri){ delete TP[ean].f; delete TP[ean].c; } else { TP[ean].f = now; TP[ean].c = CIHAZ; }
+  tpKaydet();
+  TP_BEKLE++;
+  var o = {}; o[ean] = geri ? {t:TP[ean].t} : TP[ean];
+  fbPut('sapListePelikan/'+ean, o[ean], function(st){ TP_BEKLE--; if(st<200 || st>=300) setTxt('tp-durum','🔴 '+hataMetni(st)); });
+}
+function tpOkut(kod){
+  var v = (kod!==undefined) ? String(kod) : document.getElementById('tp-bi').value.replace(/\s/g,'');
+  if(kod===undefined){ var bi = document.getElementById('tp-bi'); bi.value = ''; bi.focus(); }
+  if(!v) return;
+  var b = tpBilgi(v), ad = b.bilinen ? b.marka+' '+b.ad+' ('+b.beden+')' : (b.ad==='Bilgi yok' ? 'EAN '+v : b.ad+' · '+v), tip, msg;
+  TP_ONE = v;
+  if(TP[v] && !TP[v].f){
+    tpBulundu(v); tip = 'ok'; msg = '✅ BULUNDU: '+ad+(typeof adrEk==='function' && b.g ? adrEk(b.g) : '');
+    try{ sesCal('tekleme'); if(navigator.vibrate) navigator.vibrate([200,80,200]); }catch(e){}
+    try{ konus('Bulundu.', 400, 'bulundu'); }catch(e){}
+  } else if(TP[v]){
+    tip = 'wn2'; msg = '✔️ Bu zaten bulundu olarak isaretli: '+ad;
+    try{ sesCal('tamam'); }catch(e){}
+  } else {
+    tip = 'wn'; msg = 'ℹ️ Bu kod SAP listesinde yok: '+(b.bilinen ? ad : 'EAN '+v);
+    try{ sesCal('ok'); }catch(e){}
+  }
+  TP_MSG = {m:msg, t:tip}; toast(msg, tip); tpRender();
+}
+function tpFiltre(f){
+  TP_FILTRE = f;
+  var a = {A:'tp-fa', B:'tp-fb', T:'tp-ft'};
+  for(var k in a){ var el = document.getElementById(a[k]); if(el) el.className = 'say-f'+(k===f ? ' a' : ''); }
+  tpRender();
+}
+function tpDuz(ean, geri){ if(geri) tpBulundu(ean, true); else tpBulundu(ean); tpRender(); }
+function tpSil(ean){
+  var b = tpBilgi(ean);
+  if(!confirm('Listeden silinsin mi?\n'+b.marka+' '+b.ad+' ('+b.beden+')')) return;
+  delete TP[ean]; tpKaydet(); tpRender();
+  fbIstek('DELETE', 'sapListePelikan/'+ean, null, function(){});
+}
+function tpSifirla(){
+  if(!confirm('TUM liste (tum cihazlarda) silinsin mi?')) return;
+  TP = {}; tpKaydet(); TP_ONE = ''; TP_MSG = null; tpRender();
+  fbIstek('DELETE', 'sapListePelikan', null, function(st){ setTxt('tp-durum', st>=200 && st<300 ? '🟢 Liste temizlendi' : '🔴 '+hataMetni(st)); });
+}
+function tpKart(e){
+  var b = tpBilgi(e), x = TP[e], bul = !!x.f, sonMu = (e===TP_ONE);
+  var renk = bul ? '#22c55e' : '#ef4444';
+  var h = '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;background:var(--surface);border:1px solid var(--border);border-left:5px solid '+renk+';border-radius:10px'+(sonMu?';box-shadow:0 0 0 2px #facc15':'')+'">';
+  if(b.bilinen){
+    h += '<div style="min-width:46px;text-align:center"><div style="font-size:10px;color:var(--muted)">Beden</div><div style="font-size:20px;font-weight:800">'+sayEsc(b.beden)+'</div></div>';
+    h += '<div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--muted);font-weight:700">'+sayEsc(b.marka)+'</div><div style="font-size:14px;font-weight:700">'+sayEsc(b.ad)+'</div><div style="font-size:11px;color:var(--muted)">'+e+' · stok '+b.stok+'</div>'+(typeof adrEtiketHtml==='function' && b.g ? adrEtiketHtml(b.g) : '')+'</div>';
+  } else {
+    h += '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;letter-spacing:.5px;word-break:break-all">'+e+'</div>'+(x.n ? '<div style="font-size:13px;color:var(--muted);margin-top:2px">'+sayEsc(x.n)+'</div>' : '')+'</div>';
+  }
+  h += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">';
+  if(bul) h += '<div style="font-size:12px;font-weight:800;color:#16a34a">✅ Bulundu</div><button class="say-pm" style="margin:0;width:80px;height:30px;font-size:12px" onclick="tpDuz(\''+e+'\',1)">↩️ Geri al</button>';
+  else h += '<button class="say-pm" style="margin:0;width:80px;height:36px;background:#16a34a;color:#fff;font-size:13px" onclick="tpDuz(\''+e+'\')">✓ Buldum</button>';
+  h += '<button class="say-pm" style="margin:0;width:80px;height:28px;font-size:13px" onclick="tpSil(\''+e+'\')">🗑</button></div></div>';
+  return h;
+}
+function tpRender(){
+  var el = document.getElementById('tp-liste'); if(!el) return;
+  var tum = Object.keys(TP), bul = 0;
+  tum.forEach(function(e){ if(TP[e].f) bul++; });
+  setTxt('tp-n-top', tum.length); setTxt('tp-n-bul', bul); setTxt('tp-n-kal', tum.length-bul);
+  var sonEl = document.getElementById('tp-son');
+  if(sonEl){
+    var bx = '';
+    if(TP_MSG){ var rk = TP_MSG.t==='ok' ? '#16a34a' : '#d97706'; bx = '<div style="background:'+rk+';color:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-weight:700;font-size:14px;line-height:1.3">'+sayEsc(TP_MSG.m)+'</div>'; }
+    sonEl.innerHTML = bx;
+  }
+  var liste = tum.filter(function(e){ var f = !!TP[e].f; return TP_FILTRE==='T' || (TP_FILTRE==='A' && !f) || (TP_FILTRE==='B' && f); });
+  var mk = {};
+  liste.forEach(function(e){ var m = tpBilgi(e).marka; if(!mk[m]) mk[m] = []; mk[m].push(e); });
+  var html = '';
+  Object.keys(mk).sort().forEach(function(k){
+    var es = mk[k].sort(function(a,b){ var x = tpBilgi(a), y = tpBilgi(b), s1 = x.ad+' '+('000'+x.beden).slice(-5), s2 = y.ad+' '+('000'+y.beden).slice(-5); return s1<s2?-1:(s1>s2?1:0); });
+    html += '<div class="say-marka">'+sayEsc(k)+' <span>'+es.length+' kayit</span></div>';
+    es.slice(0,200).forEach(function(e){ html += tpKart(e); });
+  });
+  if(!html) html = '<div class="empty"><span>📋</span><p>'+(tum.length ? 'Bu filtrede kayit yok.' : 'Liste bos. SAP EAN kodlarini yukaridaki kutuya yapistir.')+'</p></div>';
+  el.innerHTML = html;
+}
+function tpYenile(){
+  fbGet('sapListePelikan', function(st, data){
+    if(st>=200 && st<300){
+      if(TP_BEKLE===0){ TP = data || {}; tpKaydet(); }
+      setTxt('tp-durum','🟢 Senkron ('+new Date().toLocaleTimeString('tr-TR')+')');
+    } else setTxt('tp-durum','🔴 '+hataMetni(st));
+    tpRender();
+  });
+}
+function tpExcel(){
+  var tum = Object.keys(TP);
+  if(!tum.length){ toast('⚠️ Liste bos','wn'); return; }
+  function sirala(a,b){ var x = tpBilgi(a), y = tpBilgi(b), s1 = x.marka+' '+x.ad+' '+x.beden, s2 = y.marka+' '+y.ad+' '+y.beden; return s1<s2?-1:(s1>s2?1:0); }
+  var wb = XLSX.utils.book_new();
+  function sayfa(ad, filtre){
+    var rows = [['MARKA','MODEL','GENERIC','BEDEN','EAN','DURUM','STOK','RAF']];
+    tum.filter(filtre).sort(sirala).forEach(function(e){ var b = tpBilgi(e); rows.push([b.marka, b.ad, b.g, b.beden, e, TP[e].f ? 'BULUNDU' : 'ARANACAK', b.stok, (typeof adrListe==='function' && b.g) ? adrListe(b.g).join(', ') : '']); });
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{wch:16},{wch:30},{wch:12},{wch:8},{wch:16},{wch:11},{wch:8},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, ad);
+  }
+  sayfa('ARANACAK', function(e){ return !TP[e].f; });
+  sayfa('BULUNDU', function(e){ return !!TP[e].f; });
+  sayfa('TUMU', function(){ return true; });
+  XLSX.writeFile(wb, 'TopluEAN_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('📥 Rapor indirildi','ok');
+}
+function tpKameraAc(){ kameraAc('toplu'); }
+tpLoad();
+window.addEventListener('load', function(){
+  var bi = document.getElementById('tp-bi');
+  if(bi) bi.addEventListener('keydown', function(e){ if(e.key==='Enter' || e.keyCode===13){ if(e.preventDefault) e.preventDefault(); tpOkut(); } });
+  tpRender(); setTimeout(tpYenile, 1800);
+  setInterval(function(){ var p = document.getElementById('pg-toplu'); if(p && p.className.indexOf(' a')>-1 && !document.hidden) tpYenile(); }, 15000);
+});
+
 var stream=null;var detector=null;var animFrame=null;var taramaAktif=false;
 var codeReader=null;var audioCtx=null;
 
@@ -2523,6 +2713,7 @@ function goTab(id,el){
   if(id==='hareketsiz'){renderHareketsiz();farkCek();}
   if(id==='trend')renderTrend();
   if(id==='hizli'){hzRender();hzYenile();document.getElementById('hz-bi').focus();}
+  if(id==='toplu'){tpRender();tpYenile();}
   if(id==='adres'){adrRender();adrYenile();document.getElementById('adr-bi').focus();}
   if(id==='tekleme'){tekRender();tekYenile();document.getElementById('tek-bi').focus();}
   if(id==='sayim'){sayRender();sayYenile();document.getElementById('say-bi').focus();}
@@ -2534,6 +2725,7 @@ function kameraSonucIsle(kod){
   if(KAMERA_KAYNAK==='tekleme'){tekOkut(kod);return;}
   if(KAMERA_KAYNAK==='adres'){adrOkut(kod);return;}
   if(KAMERA_KAYNAK==='hizli'){hzOkut(kod);return;}
+  if(KAMERA_KAYNAK==='toplu'){tpOkut(kod);return;}
   ekle(kod);
 }
 function kameraAc(kaynak){
