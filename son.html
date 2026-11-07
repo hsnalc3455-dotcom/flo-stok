@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v18.1</div>
+        <div class="header-sub">PELIKAN v18.3</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -302,7 +302,6 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
   <div class="tab" id="tab-tekleme" onclick="goTab('tekleme',this)" style="color:#d97706">👟 TEKLEME</div>
   <div class="tab" id="tab-adres" onclick="goTab('adres',this)" style="color:#0891b2">📍 DEPO ADRES</div>
   <div class="tab" id="tab-hizli" onclick="goTab('hizli',this)" style="color:#e11d48">⚡ HIZLI EKSIK</div>
-  <div class="tab" id="tab-toplu" onclick="goTab('toplu',this)" style="color:#0891b2">📋 TOPLU EAN</div>
   <div class="tab" id="tab-trend" onclick="goTab('trend',this)" style="color:#8b5cf6">📈 TREND</div>
 </div>
 <div class="pg a" id="pg-home">
@@ -320,7 +319,6 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
         <div class="home-tile" onclick="homeGit('tum')"><div class="ic" style="background:linear-gradient(135deg,#ff8a3d,#ff6000)">📦</div><div class="t">Ürünler</div><div class="b" id="ht-tum"></div></div>
         <div class="home-tile" onclick="homeGit('firsat')"><div class="ic" style="background:linear-gradient(135deg,#ff5d6c,#e11d48)">🏷️</div><div class="t">Fırsat</div><div class="b" id="ht-firsat"></div></div>
         <div class="home-tile" onclick="homeGit('hizli')"><div class="ic" style="background:linear-gradient(135deg,#fb7185,#e11d48)">⚡</div><div class="t">Hızlı Eksik</div><div class="b" id="ht-hizli"></div></div>
-        <div class="home-tile" onclick="homeGit('toplu')"><div class="ic" style="background:linear-gradient(135deg,#22d3ee,#0891b2)">📋</div><div class="t">Toplu EAN</div><div class="b" id="ht-toplu"></div></div>
         <div class="home-tile" onclick="homeGit('sayim')"><div class="ic" style="background:linear-gradient(135deg,#34d399,#059669)">📋</div><div class="t">Eksik Basma</div><div class="b" id="ht-sayim"></div></div>
         <div class="home-tile" onclick="homeGit('tekleme')"><div class="ic" style="background:linear-gradient(135deg,#fbbf24,#d97706)">👟</div><div class="t">Tekleme</div><div class="b" id="ht-tekleme"></div></div>
         <div class="home-tile" onclick="homeGit('adres')"><div class="ic" style="background:linear-gradient(135deg,#22d3ee,#0891b2)">📍</div><div class="t">Depo Adres</div><div class="b" id="ht-adres"></div></div>
@@ -434,6 +432,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <button id="tek-vk" class="say-mod a" onclick="tekGorun('k')">➕ KAYIT</button>
       <button id="tek-vl" class="say-mod" onclick="tekGorun('l')">📋 LİSTE</button>
+      <button id="tek-vs" class="say-mod" onclick="tekGorun('s')">📋 SAP</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px">
       <div class="stat r" style="flex:1"><div class="sn" id="tek-n-b">0</div><div class="sl">Bekleyen tekleme</div></div>
@@ -465,6 +464,37 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     </div>
     <div id="tek-sayi" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
     </div>
+<div id="tek-sap" style="display:none">
+    <div style="font-weight:800;font-size:15px;margin-bottom:4px">📋 SAP tekleme listesi</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">SAP'tan aldigin Excel'i yukle. EAN'in oldugu satirdaki diger yazilar not olarak alinir. Liste tum cihazlarda ortak olur; urunu okutunca "bulundu" olarak isaretlenir.</div>
+    <input type="file" id="tp-xl" accept=".xlsx,.xls,.csv" style="display:none" onchange="tpExcelYukle(this)">
+    <button class="say-btn" style="width:100%;margin-bottom:10px" onclick="document.getElementById('tp-xl').click()">📂 EXCEL DOSYASI YUKLE</button>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">veya kodlari elle yapistir:</div>
+    <textarea id="tp-ta" rows="6" placeholder="EAN kodlarini yapistir (alt alta). Istersen EAN yanina not yaz: 8852595566 NIKE 40" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:8px"></textarea>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button class="eb" style="flex:1" onclick="tpEkle()">➕ LISTEYE EKLE</button>
+      <button class="say-f" onclick="tpTemizleKutu()">Kutuyu temizle</button>
+    </div>
+    <div id="tp-ozet" style="font-size:12px;font-weight:700;margin-bottom:12px;min-height:16px"></div>
+    <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tp-bi" placeholder="Urunu okut: bulundu isaretle..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="tpOkut()">OKUT</button></div>
+    <button class="kamera-btn" onclick="tpKameraAc()">📷 KAMERA ILE OKUT</button>
+    <div id="tp-son"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="stat" style="flex:1"><div class="sn" id="tp-n-top">0</div><div class="sl">Listede</div></div>
+      <div class="stat" style="flex:1"><div class="sn" id="tp-n-bul">0</div><div class="sl">Bulundu</div></div>
+      <div class="stat r" style="flex:1"><div class="sn" id="tp-n-kal">0</div><div class="sl">Aranacak</div></div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+      <button id="tp-fa" class="say-f a" onclick="tpFiltre('A')">Aranacak</button>
+      <button id="tp-fb" class="say-f" onclick="tpFiltre('B')">Bulundu</button>
+      <button id="tp-ft" class="say-f" onclick="tpFiltre('T')">Hepsi</button>
+      <button class="say-f" onclick="tpYenile()">🔄</button>
+      <button class="say-f" onclick="tpExcel()">📥 Excel</button>
+    </div>
+    <div id="tp-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Hazir</div>
+    <div id="tp-liste"></div>
+    <button class="rb" onclick="tpSifirla()">🗑 Listeyi tamamen temizle</button>
+  </div>
     <div id="tek-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Tekleme hazır</div>
     <div id="tek-liste"></div>
   </div>
@@ -507,36 +537,6 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div id="adr-sayi" style="font-size:12px;color:var(--muted);margin-bottom:4px"></div>
     <div id="adr-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Hazir</div>
     <div id="adr-liste"></div>
-  </div>
-</div>
-<div class="pg" id="pg-toplu">
-  <div style="padding:14px">
-    <div style="font-weight:800;font-size:15px;margin-bottom:4px">📋 Toplu EAN listesi</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">SAP'taki tekleme EAN kodlarini alt alta yapistir (EAN'in yanina model/beden notu yazabilirsin). Liste tum cihazlarda ortak olur; urunu okutunca "bulundu" olarak isaretlenir.</div>
-    <textarea id="tp-ta" rows="6" placeholder="EAN kodlarini yapistir (alt alta). Istersen EAN yanina not yaz: 8852595566 NIKE 40" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:8px"></textarea>
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <button class="eb" style="flex:1" onclick="tpEkle()">➕ LISTEYE EKLE</button>
-      <button class="say-f" onclick="tpTemizleKutu()">Kutuyu temizle</button>
-    </div>
-    <div id="tp-ozet" style="font-size:12px;font-weight:700;margin-bottom:12px;min-height:16px"></div>
-    <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tp-bi" placeholder="Urunu okut: bulundu isaretle..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="tpOkut()">OKUT</button></div>
-    <button class="kamera-btn" onclick="tpKameraAc()">📷 KAMERA ILE OKUT</button>
-    <div id="tp-son"></div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div class="stat" style="flex:1"><div class="sn" id="tp-n-top">0</div><div class="sl">Listede</div></div>
-      <div class="stat" style="flex:1"><div class="sn" id="tp-n-bul">0</div><div class="sl">Bulundu</div></div>
-      <div class="stat r" style="flex:1"><div class="sn" id="tp-n-kal">0</div><div class="sl">Aranacak</div></div>
-    </div>
-    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-      <button id="tp-fa" class="say-f a" onclick="tpFiltre('A')">Aranacak</button>
-      <button id="tp-fb" class="say-f" onclick="tpFiltre('B')">Bulundu</button>
-      <button id="tp-ft" class="say-f" onclick="tpFiltre('T')">Hepsi</button>
-      <button class="say-f" onclick="tpYenile()">🔄</button>
-      <button class="say-f" onclick="tpExcel()">📥 Excel</button>
-    </div>
-    <div id="tp-durum" style="font-size:11px;color:var(--muted);margin-bottom:10px">Hazir</div>
-    <div id="tp-liste"></div>
-    <button class="rb" onclick="tpSifirla()">🗑 Listeyi tamamen temizle</button>
   </div>
 </div>
 <div class="pg" id="pg-hizli">
@@ -1371,8 +1371,11 @@ function tekGorun(v){
   TEK_GORUN = v;
   var k=document.getElementById('tek-vk'), l=document.getElementById('tek-vl');
   if(k) k.className='say-mod'+(v==='k'?' a':''); if(l) l.className='say-mod'+(v==='l'?' a':'');
-  var a=document.getElementById('tek-kayit'), b=document.getElementById('tek-listegor');
-  if(a) a.style.display = v==='k' ? 'block' : 'none'; if(b) b.style.display = v==='l' ? 'block' : 'none';
+  var sb=document.getElementById('tek-vs'); if(sb) sb.className='say-mod'+(v==='s'?' a':'');
+  var a=document.getElementById('tek-kayit'), b=document.getElementById('tek-listegor'), sp=document.getElementById('tek-sap'), tl=document.getElementById('tek-liste'), td=document.getElementById('tek-durum');
+  if(a) a.style.display = v==='k' ? 'block' : 'none'; if(b) b.style.display = v==='l' ? 'block' : 'none'; if(sp) sp.style.display = v==='s' ? 'block' : 'none';
+  if(tl) tl.style.display = v==='s' ? 'none' : 'block'; if(td) td.style.display = v==='s' ? 'none' : 'block';
+  if(v==='s'){ tpRender(); tpYenile(); return; }
   tekRender();
   var el = document.getElementById(v==='k' ? 'tek-bi' : 'tek-ara'); if(el) el.focus();
 }
@@ -1418,6 +1421,7 @@ function tekOkut(kod){
   var v = (kod!==undefined) ? String(kod) : document.getElementById('tek-bi').value.replace(/\s/g,'');
   if(kod===undefined){ var bi=document.getElementById('tek-bi'); bi.value=''; bi.focus(); }
   if(!v) return;
+  if(tpKontrol(v)==='stop') return;
   var g = D[v], info, beden = '?';
   if(g && G[g]){
     info = G[g];
@@ -2319,6 +2323,9 @@ function tpAyikla(metin){
 function tpTemizleKutu(){ var t = document.getElementById('tp-ta'); if(t) t.value = ''; setTxt('tp-ozet',''); }
 function tpEkle(){
   var t = document.getElementById('tp-ta'), liste = tpAyikla(t.value);
+  tpEkleListe(liste, function(){ t.value = ''; });
+}
+function tpEkleListe(liste, okCb){
   if(!liste.length){ setTxt('tp-ozet','⚠️ Gecerli EAN kodu bulunamadi (8-14 haneli sayi)'); return; }
   var yeni = {}, n = 0, var_ = 0, now = new Date().getTime();
   for(var i=0;i<liste.length;i++){ var e = liste[i].e, nt = liste[i].n; if(TP[e]){ var_++; if(nt && !TP[e].n){ TP[e].n = nt; yeni[e] = TP[e]; } continue; } yeni[e] = nt ? {t:now, n:nt} : {t:now}; TP[e] = yeni[e]; n++; }
@@ -2326,11 +2333,42 @@ function tpEkle(){
   setTxt('tp-ozet', '✅ '+liste.length+' kod okundu: '+n+' yeni eklendi'+(var_ ? ', '+var_+' zaten listede' : ''));
   if(!n && !Object.keys(yeni).length){ return; }
   TP_BEKLE++;
+  setTxt('tp-durum','⏳ Gonderiliyor...');
   fbIstek('PATCH', 'sapListePelikan', yeni, function(st){
     TP_BEKLE--;
     if(st<200 || st>=300){ setTxt('tp-durum','🔴 Gonderilemedi: '+hataMetni(st)+' (liste telefonda saklandi)'); }
-    else { setTxt('tp-durum','🟢 Senkron ('+new Date().toLocaleTimeString('tr-TR')+')'); t.value = ''; }
+    else { setTxt('tp-durum','🟢 Senkron ('+new Date().toLocaleTimeString('tr-TR')+')'); if(okCb) okCb(); }
   });
+}
+function tpExcelYukle(inp){
+  var f = inp.files && inp.files[0]; if(!f) return;
+  setTxt('tp-ozet','📊 Excel okunuyor...');
+  var rd = new FileReader();
+  rd.onload = function(ev){
+    try{
+      var wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}), liste = [], gor = {}, bozuk = 0, satir = 0;
+      for(var si=0; si<wb.SheetNames.length; si++){
+        var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[si]], {header:1, defval:'', raw:true});
+        for(var r=0;r<rows.length;r++){
+          var row = rows[r], eans = [], diger = [];
+          for(var c=0;c<row.length;c++){
+            var v = row[c]; if(v==='' || v===null || v===undefined) continue;
+            var sv = (typeof v==='number') ? (isFinite(v) && v>=1e7 && v<1e15 ? String(Math.round(v)) : String(v)) : String(v).trim();
+            if(/^\d{8,14}$/.test(sv)) eans.push(sv);
+            else { if(/^\d\.?\d*e\+?\d+$/i.test(sv)) bozuk++; if(sv) diger.push(sv); }
+          }
+          if(!eans.length) continue;
+          satir++;
+          var not = eans.length===1 ? diger.join(' · ').slice(0, 80) : '';
+          for(var k=0;k<eans.length;k++){ if(!gor[eans[k]]){ gor[eans[k]] = 1; liste.push({e:eans[k], n:(eans.length===1 ? not : '')}); } }
+        }
+      }
+      tpEkleListe(liste, null);
+      if(bozuk) setTxt('tp-ozet', document.getElementById('tp-ozet').textContent+' ⚠️ '+bozuk+' hucrede EAN bilimsel formatta (8,85E+11) bozulmus, onlari okuyamadim. Excel\'de o sutunu Metin yapip tekrar dene.');
+    }catch(err){ setTxt('tp-ozet','❌ Excel okunamadi: '+err.message); }
+    inp.value = '';
+  };
+  rd.readAsArrayBuffer(f);
 }
 function tpBulundu(ean, geri){
   var now = new Date().getTime();
@@ -2452,6 +2490,20 @@ window.addEventListener('load', function(){
   tpRender(); setTimeout(tpYenile, 1800);
   setInterval(function(){ var p = document.getElementById('pg-toplu'); if(p && p.className.indexOf(' a')>-1 && !document.hidden) tpYenile(); }, 15000);
 });
+// Baska sekmelerde okutulan kod SAP listesindeyse bulundu isaretle. 'stop' = stok dosyasinda yok, normal akisi durdur
+function tpKontrol(v){
+  try{
+    if(!TP[v]) return 'devam';
+    var b = tpBilgi(v), ad = b.bilinen ? b.marka+' '+b.ad+' ('+b.beden+')' : (b.ad==='Bilgi yok' ? 'EAN '+v : b.ad+' · '+v), msg, tip;
+    if(!TP[v].f){
+      tpBulundu(v); tip = 'ok'; msg = '📋 SAP TEKLEME LISTESINDE: '+ad+' → BULUNDU olarak isaretlendi';
+      try{ sesCal('tekleme'); if(navigator.vibrate) navigator.vibrate([200,80,200,80,200]); }catch(e){}
+      try{ konus('Bulundu.', 400, 'bulundu'); }catch(e){}
+    } else { tip = 'wn2'; msg = '📋 SAP listesinde, zaten bulundu isaretli: '+ad; }
+    TP_ONE = v; TP_MSG = {m:msg, t:tip}; toast(msg, tip); tpRender();
+    return b.bilinen ? 'devam' : 'stop';
+  }catch(e){ return 'devam'; }
+}
 
 var stream=null;var detector=null;var animFrame=null;var taramaAktif=false;
 var codeReader=null;var audioCtx=null;
@@ -2648,6 +2700,7 @@ function excelIndir(){
 function ekle(k){
   var v=k!==undefined?String(k):document.getElementById('bi').value.trim();if(!v)return;
   try{teklemeKontrol(v);}catch(e){}
+  if(tpKontrol(v)==='stop'){if(k===undefined){document.getElementById('bi').value='';document.getElementById('bi').focus();}return;}
   var g=D[v];
   if(!g){toast('⚠️ Bu urun stokta yok!','wn');sesCal('hata');if(k===undefined){document.getElementById('bi').value='';document.getElementById('bi').focus();}return;}
   C[g]=(C[g]||0)+1;
@@ -2713,7 +2766,6 @@ function goTab(id,el){
   if(id==='hareketsiz'){renderHareketsiz();farkCek();}
   if(id==='trend')renderTrend();
   if(id==='hizli'){hzRender();hzYenile();document.getElementById('hz-bi').focus();}
-  if(id==='toplu'){tpRender();tpYenile();}
   if(id==='adres'){adrRender();adrYenile();document.getElementById('adr-bi').focus();}
   if(id==='tekleme'){tekRender();tekYenile();document.getElementById('tek-bi').focus();}
   if(id==='sayim'){sayRender();sayYenile();document.getElementById('say-bi').focus();}
