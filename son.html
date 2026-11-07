@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v18.3</div>
+        <div class="header-sub">PELIKAN v18.5</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -484,9 +484,11 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
       <div class="stat" style="flex:1"><div class="sn" id="tp-n-bul">0</div><div class="sl">Bulundu</div></div>
       <div class="stat r" style="flex:1"><div class="sn" id="tp-n-kal">0</div><div class="sl">Aranacak</div></div>
     </div>
+    <div id="tp-esles" style="font-size:12px;margin-bottom:10px;line-height:1.5"></div>
     <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
       <button id="tp-fa" class="say-f a" onclick="tpFiltre('A')">Aranacak</button>
       <button id="tp-fb" class="say-f" onclick="tpFiltre('B')">Bulundu</button>
+      <button id="tp-fk" class="say-f" onclick="tpFiltre('K')">Bizde kayitli</button>
       <button id="tp-ft" class="say-f" onclick="tpFiltre('T')">Hepsi</button>
       <button class="say-f" onclick="tpYenile()">🔄</button>
       <button class="say-f" onclick="tpExcel()">📥 Excel</button>
@@ -2320,6 +2322,17 @@ function tpAyikla(metin){
   }
   return liste;
 }
+function tpTekKayit(ean){
+  try{ if(typeof tekListe!=='function') return null; var l = tekListe().filter(function(x){ return x.ean===ean; }); return l.length ? l : null; }catch(e){ return null; }
+}
+function tpEsles(liste){
+  var st = 0, tk = 0;
+  for(var i=0;i<liste.length;i++){ if(D[liste[i].e]) st++; if(tpTekKayit(liste[i].e)) tk++; }
+  return ' · Stok dosyamizda: '+st+' · Tekleme kaydimizda: '+tk;
+}
+function tpSapYok(){
+  try{ if(typeof tekListe!=='function') return []; return tekListe().filter(function(x){ return x.durum==='BEKLIYOR' && !TP[x.ean]; }); }catch(e){ return []; }
+}
 function tpTemizleKutu(){ var t = document.getElementById('tp-ta'); if(t) t.value = ''; setTxt('tp-ozet',''); }
 function tpEkle(){
   var t = document.getElementById('tp-ta'), liste = tpAyikla(t.value);
@@ -2330,7 +2343,7 @@ function tpEkleListe(liste, okCb){
   var yeni = {}, n = 0, var_ = 0, now = new Date().getTime();
   for(var i=0;i<liste.length;i++){ var e = liste[i].e, nt = liste[i].n; if(TP[e]){ var_++; if(nt && !TP[e].n){ TP[e].n = nt; yeni[e] = TP[e]; } continue; } yeni[e] = nt ? {t:now, n:nt} : {t:now}; TP[e] = yeni[e]; n++; }
   tpKaydet(); tpRender();
-  setTxt('tp-ozet', '✅ '+liste.length+' kod okundu: '+n+' yeni eklendi'+(var_ ? ', '+var_+' zaten listede' : ''));
+  setTxt('tp-ozet', '✅ '+liste.length+' kod okundu: '+n+' yeni eklendi'+(var_ ? ', '+var_+' zaten listede' : '')+tpEsles(liste));
   if(!n && !Object.keys(yeni).length){ return; }
   TP_BEKLE++;
   setTxt('tp-durum','⏳ Gonderiliyor...');
@@ -2400,7 +2413,7 @@ function tpOkut(kod){
 }
 function tpFiltre(f){
   TP_FILTRE = f;
-  var a = {A:'tp-fa', B:'tp-fb', T:'tp-ft'};
+  var a = {A:'tp-fa', B:'tp-fb', K:'tp-fk', T:'tp-ft'};
   for(var k in a){ var el = document.getElementById(a[k]); if(el) el.className = 'say-f'+(k===f ? ' a' : ''); }
   tpRender();
 }
@@ -2416,15 +2429,20 @@ function tpSifirla(){
   TP = {}; tpKaydet(); TP_ONE = ''; TP_MSG = null; tpRender();
   fbIstek('DELETE', 'sapListePelikan', null, function(st){ setTxt('tp-durum', st>=200 && st<300 ? '🟢 Liste temizlendi' : '🔴 '+hataMetni(st)); });
 }
+function tpTekEtiket(e){
+  var l = tpTekKayit(e); if(!l) return '';
+  var t = l.map(function(x){ return tekAyakAd(x.ayak)+' '+(x.durum==='BEKLIYOR' ? 'bekliyor' : 'eslesti'); }).join(', ');
+  return '<div style="display:inline-block;margin-top:3px;font-size:11px;font-weight:700;background:#0e7490;color:#fff;border-radius:8px;padding:2px 8px">👟 Tekleme kaydimizda: '+sayEsc(t)+'</div>';
+}
 function tpKart(e){
   var b = tpBilgi(e), x = TP[e], bul = !!x.f, sonMu = (e===TP_ONE);
   var renk = bul ? '#22c55e' : '#ef4444';
   var h = '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;background:var(--surface);border:1px solid var(--border);border-left:5px solid '+renk+';border-radius:10px'+(sonMu?';box-shadow:0 0 0 2px #facc15':'')+'">';
   if(b.bilinen){
     h += '<div style="min-width:46px;text-align:center"><div style="font-size:10px;color:var(--muted)">Beden</div><div style="font-size:20px;font-weight:800">'+sayEsc(b.beden)+'</div></div>';
-    h += '<div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--muted);font-weight:700">'+sayEsc(b.marka)+'</div><div style="font-size:14px;font-weight:700">'+sayEsc(b.ad)+'</div><div style="font-size:11px;color:var(--muted)">'+e+' · stok '+b.stok+'</div>'+(typeof adrEtiketHtml==='function' && b.g ? adrEtiketHtml(b.g) : '')+'</div>';
+    h += '<div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--muted);font-weight:700">'+sayEsc(b.marka)+'</div><div style="font-size:14px;font-weight:700">'+sayEsc(b.ad)+'</div><div style="font-size:11px;color:var(--muted)">'+e+' · stok '+b.stok+'</div>'+(typeof adrEtiketHtml==='function' && b.g ? adrEtiketHtml(b.g) : '')+tpTekEtiket(e)+'</div>';
   } else {
-    h += '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;letter-spacing:.5px;word-break:break-all">'+e+'</div>'+(x.n ? '<div style="font-size:13px;color:var(--muted);margin-top:2px">'+sayEsc(x.n)+'</div>' : '')+'</div>';
+    h += '<div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;letter-spacing:.5px;word-break:break-all">'+e+'</div>'+(x.n ? '<div style="font-size:13px;color:var(--muted);margin-top:2px">'+sayEsc(x.n)+'</div>' : '')+tpTekEtiket(e)+'</div>';
   }
   h += '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">';
   if(bul) h += '<div style="font-size:12px;font-weight:800;color:#16a34a">✅ Bulundu</div><button class="say-pm" style="margin:0;width:80px;height:30px;font-size:12px" onclick="tpDuz(\''+e+'\',1)">↩️ Geri al</button>';
@@ -2437,13 +2455,16 @@ function tpRender(){
   var tum = Object.keys(TP), bul = 0;
   tum.forEach(function(e){ if(TP[e].f) bul++; });
   setTxt('tp-n-top', tum.length); setTxt('tp-n-bul', bul); setTxt('tp-n-kal', tum.length-bul);
+  var kayitli = 0; tum.forEach(function(e){ if(tpTekKayit(e)) kayitli++; });
+  var sapYok = tpSapYok().length, esEl = document.getElementById('tp-esles');
+  if(esEl) esEl.innerHTML = tum.length ? '👟 Bizim tekleme kaydimizla eslesen: <b>'+kayitli+'</b> / '+tum.length+' &nbsp;·&nbsp; Bizde bekleyen ama SAP listesinde olmayan: <b>'+sapYok+'</b>' : '';
   var sonEl = document.getElementById('tp-son');
   if(sonEl){
     var bx = '';
     if(TP_MSG){ var rk = TP_MSG.t==='ok' ? '#16a34a' : '#d97706'; bx = '<div style="background:'+rk+';color:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-weight:700;font-size:14px;line-height:1.3">'+sayEsc(TP_MSG.m)+'</div>'; }
     sonEl.innerHTML = bx;
   }
-  var liste = tum.filter(function(e){ var f = !!TP[e].f; return TP_FILTRE==='T' || (TP_FILTRE==='A' && !f) || (TP_FILTRE==='B' && f); });
+  var liste = tum.filter(function(e){ var f = !!TP[e].f; return TP_FILTRE==='T' || (TP_FILTRE==='A' && !f) || (TP_FILTRE==='B' && f) || (TP_FILTRE==='K' && !!tpTekKayit(e)); });
   var mk = {};
   liste.forEach(function(e){ var m = tpBilgi(e).marka; if(!mk[m]) mk[m] = []; mk[m].push(e); });
   var html = '';
@@ -2478,7 +2499,12 @@ function tpExcel(){
   }
   sayfa('ARANACAK', function(e){ return !TP[e].f; });
   sayfa('BULUNDU', function(e){ return !!TP[e].f; });
+  sayfa('BIZDE KAYITLI', function(e){ return !!tpTekKayit(e); });
   sayfa('TUMU', function(){ return true; });
+  var r2 = [['MARKA','MODEL','GENERIC','BEDEN','EAN','AYAK','TARIH']];
+  tpSapYok().forEach(function(x){ r2.push([x.marka, x.ad, x.g, x.beden, x.ean, tekAyakAd(x.ayak), new Date(x.tarih).toLocaleDateString('tr-TR')]); });
+  var w2 = XLSX.utils.aoa_to_sheet(r2); w2['!cols'] = [{wch:16},{wch:30},{wch:12},{wch:8},{wch:16},{wch:8},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, w2, 'SAPTA YOK (bizde bekleyen)');
   XLSX.writeFile(wb, 'TopluEAN_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('📥 Rapor indirildi','ok');
 }
