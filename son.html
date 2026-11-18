@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v18.5</div>
+        <div class="header-sub">PELIKAN v18.6</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -447,6 +447,9 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div id="tek-mod-yazi" style="text-align:center;font-weight:700;font-size:13px;margin-bottom:10px"></div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tek-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="tekOkut()">EKLE</button></div>
     <button class="kamera-btn" onclick="tekKameraAc()">📷 KAMERA İLE OKUT</button>
+    <div style="font-size:12px;color:var(--muted);margin:12px 0 4px;font-weight:700">Barkod yoksa generic kodu ile</div>
+    <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tek-gen" placeholder="Generic kodu yaz..." autocomplete="off" inputmode="numeric"><button class="eb" onclick="tekGenAra()">BUL</button></div>
+    <div id="tek-gen-sec"></div>
     </div>
     <div id="tek-listegor" style="display:none">
     <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -938,9 +941,9 @@ function excelIsle(rows){
   var toplamStok = 0;
   rows.forEach(function(row){
     var ean = String(row['EAN/UPC kodu']||'').trim();
-    if(!ean || ean==='undefined') return;
+    var eanYok = (!ean || ean==='undefined');
     // EAN'i temizle (bilimsel notasyon varsa)
-    if(ean.indexOf('E')>-1 || ean.indexOf('e')>-1){
+    if(!eanYok && (ean.indexOf('E')>-1 || ean.indexOf('e')>-1)){
       ean = String(Math.round(parseFloat(ean)));
     }
     // Urun Stok Grubu filtresi - sadece ayakkabi
@@ -961,6 +964,7 @@ function excelIsle(rows){
       model = parcalar.length>1 ? parcalar[1].trim() : adRaw;
     }
     if(!generic) return;
+    if(eanYok){ if(!beden) return; ean = 'GEN-'+generic+'-'+beden; }
     // Harici kelime/marka filtresi
     if(haricMi(marka, model)) return;
     var urunGrubu = String(row['Ürün Grubu']||'').trim().toUpperCase();
@@ -1419,11 +1423,39 @@ function teklemeKontrol(ean, tekrar){
   try{ toast('👟 TEKLEME VAR! '+tekAdi(r)+' — '+tekAyakAd(tekDiger(r.ayak))+' ayak aranıyor','er'); }catch(e){}
   try{ sesCal('tekleme'); if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
 }
+function tekGenAra(){
+  var i = document.getElementById('tek-gen'), v = i ? i.value.replace(/\s/g,'') : '';
+  if(!v) return;
+  tekGenericSec(v);
+}
+function tekGenericSec(gk){
+  var el = document.getElementById('tek-gen-sec'); if(!el) return;
+  var info = G[gk];
+  if(!info){
+    el.innerHTML = '<div style="background:#d97706;color:#fff;border-radius:10px;padding:10px 12px;font-weight:700;font-size:14px;margin-bottom:10px">Generic bulunamadi: '+sayEsc(gk)+'</div>';
+    toast('⚠️ Bu generic stok dosyasinda yok','wn'); try{ sesCal('hata'); }catch(e){} return;
+  }
+  var h = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px">';
+  h += '<div style="font-size:11px;color:var(--muted);font-weight:700">'+sayEsc(info.marka)+' · Generic '+sayEsc(gk)+'</div>';
+  h += '<div style="font-size:16px;font-weight:800;margin-bottom:4px">'+sayEsc(info.ad)+'</div>';
+  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Elimdeki ayak: <b>'+tekAyakAd(TEK_AYAK)+'</b> · bedene dokun:</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+  info.bedenler.forEach(function(b){
+    h += '<button class="say-pm" style="margin:0;min-width:64px;height:52px;padding:0 10px;font-size:18px;font-weight:800;line-height:1.1" onclick="tekGenBeden(\''+b.ean+'\')">'+sayEsc(b.beden)+'<div style="font-size:10px;font-weight:600;color:var(--muted)">stok '+b.stok+'</div></button>';
+  });
+  h += '</div><button class="say-f" style="margin-top:10px" onclick="document.getElementById(\'tek-gen-sec\').innerHTML=\'\'">Kapat</button></div>';
+  el.innerHTML = h;
+}
+function tekGenBeden(ean){
+  var el = document.getElementById('tek-gen-sec'); if(el) el.innerHTML = '';
+  var i = document.getElementById('tek-gen'); if(i) i.value = '';
+  tekOkut(ean);
+}
 function tekOkut(kod){
   var v = (kod!==undefined) ? String(kod) : document.getElementById('tek-bi').value.replace(/\s/g,'');
   if(kod===undefined){ var bi=document.getElementById('tek-bi'); bi.value=''; bi.focus(); }
   if(!v) return;
   if(tpKontrol(v)==='stop') return;
+  if(!D[v] && G[v]){ tekGenericSec(v); return; }
   var g = D[v], info, beden = '?';
   if(g && G[g]){
     info = G[g];
