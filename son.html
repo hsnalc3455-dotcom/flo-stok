@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v18.7</div>
+        <div class="header-sub">PELIKAN v18.8</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -466,6 +466,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
       <button class="say-btn" onclick="tekYenile()">🔄 Yenile</button>
       <button class="say-btn" onclick="tekExcel()">📥 Excel</button>
     </div>
+    <button class="rb" style="margin-bottom:10px" onclick="tekHepsiniSil()">🗑 TUM TEKLEMELERI SIL (sifirla)</button>
     <div id="tek-sayi" style="font-size:12px;color:var(--muted);margin-bottom:8px"></div>
     </div>
 <div id="tek-sap" style="display:none">
@@ -1511,6 +1512,20 @@ function tekSil(id){
   delete TEK[id]; tekCacheYaz();
   fbIstek('DELETE', 'teklemePelikan/'+id, null, function(st){ if(st<200 || st>=300) toast('❌ '+hataMetni(st),'wn'); });
   tekRender();
+}
+function tekHepsiniSil(){
+  var n = tekListe().length;
+  if(!n){ toast('Silinecek tekleme kaydi yok','wn'); return; }
+  if(!confirm('TUM tekleme kayitlari ('+n+' adet, bekleyen ve eslesen) tum cihazlardan silinecek.\n\nOnce Excel indirmeni oneririm. Devam edilsin mi?')) return;
+  if(!confirm('Emin misin? Bu islem geri alinamaz.')) return;
+  setTxt('tek-durum','⏳ Siliniyor...');
+  fbIstek('DELETE', 'teklemePelikan', null, function(st){
+    if(st<200 || st>=300){ toast('❌ Silinemedi: '+hataMetni(st),'wn'); setTxt('tek-durum','🔴 '+hataMetni(st)); return; }
+    TEK = {}; tekCacheYaz(); tekRender();
+    var uy = document.getElementById('tek-uyari'); if(uy) uy.innerHTML = '';
+    toast('🗑 Tum tekleme kayitlari silindi ('+n+')','ok');
+    setTxt('tek-durum','🟢 Liste sifirlandi ('+new Date().toLocaleTimeString('tr-TR')+')');
+  });
 }
 function tekKameraAc(){ kameraAc('tekleme'); }
 function tekGrupluHtml(liste){
