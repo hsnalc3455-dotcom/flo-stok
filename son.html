@@ -285,7 +285,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div class="header-right" style="display:flex;align-items:center;gap:10px">
       <button onclick="sesAyarAc()" id="mik-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🎙</button><button onclick="sesliDegistir()" id="ses-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer;margin-right:6px">🔊</button><button onclick="modDegistir()" id="mod-btn" style="background:rgba(255,255,255,.2);border:none;border-radius:50px;color:#fff;font-size:18px;width:36px;height:36px;cursor:pointer">🌙</button>
       <div>
-        <div class="header-sub">PELIKAN v18.6</div>
+        <div class="header-sub">PELIKAN v18.7</div>
         <div class="kirik-badge" id="kirik-badge">🔴 FIRSAT VAR</div>
       </div>
     </div>
@@ -447,6 +447,7 @@ body.home-aktif{background:radial-gradient(90% 40% at 100% 0,rgba(255,96,0,.16),
     <div id="tek-mod-yazi" style="text-align:center;font-weight:700;font-size:13px;margin-bottom:10px"></div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tek-bi" placeholder="Barkod okut veya yaz..." inputmode="numeric" autocomplete="off"><button class="eb" onclick="tekOkut()">EKLE</button></div>
     <button class="kamera-btn" onclick="tekKameraAc()">📷 KAMERA İLE OKUT</button>
+    <div id="tek-uyari"></div>
     <div style="font-size:12px;color:var(--muted);margin:12px 0 4px;font-weight:700">Barkod yoksa generic kodu ile</div>
     <div class="ir" style="margin-bottom:10px"><input type="text" class="bi" id="tek-gen" placeholder="Generic kodu yaz..." autocomplete="off" inputmode="numeric"><button class="eb" onclick="tekGenAra()">BUL</button></div>
     <div id="tek-gen-sec"></div>
@@ -1450,10 +1451,30 @@ function tekGenBeden(ean){
   var i = document.getElementById('tek-gen'); if(i) i.value = '';
   tekOkut(ean);
 }
+function tekBenzerUyar(rec){
+  var el = document.getElementById('tek-uyari'); if(!el) return;
+  if(!rec.g) return;
+  var yakin = tekListe().filter(function(x){ return x.durum==='BEKLIYOR' && x.g===rec.g && x.ean!==rec.ean && x.ayak!==rec.ayak; });
+  if(!yakin.length) return;
+  yakin.sort(function(a,b){ return parseFloat(String(a.beden).replace(',','.'))-parseFloat(String(b.beden).replace(',','.')); });
+  var h = '<div style="background:#d97706;color:#fff;border-radius:12px;padding:12px;margin:10px 0;font-size:14px;line-height:1.35"><b>⚠️ Ayni modelde karsi ayak baska numarada bekliyor.</b><br>Girdigin: <b>'+sayEsc(rec.beden)+' '+tekAyakAd(rec.ayak)+'</b>. Numarayi kontrol et, yanlis girdiysen asagidan duzelt:';
+  yakin.slice(0,4).forEach(function(y){
+    h += '<div style="margin-top:8px"><button class="say-btn" style="width:100%;background:#fff;color:#92400e" onclick="tekYanlisBeden(\''+rec.id+'\',\''+y.id+'\')">Numarayi yanlis girdim → '+sayEsc(y.beden)+' '+tekAyakAd(y.ayak)+' ile esle</button></div>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
+}
+function tekYanlisBeden(yeniId, bekId){
+  var r = TEK[yeniId]; if(r){ delete TEK[yeniId]; tekCacheYaz(); fbIstek('DELETE', 'teklemePelikan/'+yeniId, null, function(){}); }
+  var uy = document.getElementById('tek-uyari'); if(uy) uy.innerHTML = '';
+  tekEsle(bekId);
+  tekRender();
+}
 function tekOkut(kod){
   var v = (kod!==undefined) ? String(kod) : document.getElementById('tek-bi').value.replace(/\s/g,'');
   if(kod===undefined){ var bi=document.getElementById('tek-bi'); bi.value=''; bi.focus(); }
   if(!v) return;
+  var uy0 = document.getElementById('tek-uyari'); if(uy0) uy0.innerHTML = '';
   if(tpKontrol(v)==='stop') return;
   if(!D[v] && G[v]){ tekGenericSec(v); return; }
   var g = D[v], info, beden = '?';
@@ -1477,6 +1498,7 @@ function tekOkut(kod){
     var id = 't'+new Date().getTime()+Math.random().toString(36).slice(2,5);
     var rec = {id:id, ean:v, g:g, marka:info.marka, ad:info.ad, beden:beden, ayak:TEK_AYAK, durum:'BEKLIYOR', tarih:new Date().getTime(), cihaz:tekCihaz()};
     TEK[id] = rec; tekYaz(rec);
+    tekBenzerUyar(rec);
     var m = '👟 Tekleme kaydedildi: '+info.marka+' '+info.ad+' ('+beden+') | elinde '+tekAyakAd(TEK_AYAK)+', '+tekAyakAd(tekDiger(TEK_AYAK))+' aranacak';
     toast(m,'ok'); setTxt('kson',m);
     try{ sesCal('ok'); }catch(e){}
@@ -1491,6 +1513,31 @@ function tekSil(id){
   tekRender();
 }
 function tekKameraAc(){ kameraAc('tekleme'); }
+function tekGrupluHtml(liste){
+  var mk = {};
+  liste.forEach(function(r){ var m = r.marka || '?'; var k = r.g || r.ad || r.ean; if(!mk[m]) mk[m] = {}; if(!mk[m][k]) mk[m][k] = {ad:r.ad, g:r.g, kayit:[]}; mk[m][k].kayit.push(r); });
+  var html = '', gosterilen = 0;
+  Object.keys(mk).sort().forEach(function(m){
+    var modeller = Object.keys(mk[m]).map(function(k){ return mk[m][k]; }).sort(function(a,b){ return a.ad<b.ad?-1:(a.ad>b.ad?1:0); });
+    var adet = 0; modeller.forEach(function(x){ adet += x.kayit.length; });
+    html += '<div class="say-marka">'+sayEsc(m)+' <span>'+adet+' tekleme · '+modeller.length+' model</span></div>';
+    modeller.forEach(function(x){
+      if(gosterilen >= 150) return;
+      x.kayit.sort(function(a,b){ return parseFloat(String(a.beden).replace(',','.'))-parseFloat(String(b.beden).replace(',','.')); });
+      html += '<div class="say-kart" style="border-left:6px solid #f59e0b"><div style="font-size:15px;font-weight:800">'+sayEsc(x.ad)+'</div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">'+(x.g ? 'Generic '+sayEsc(x.g)+' · ' : '')+x.kayit.length+' numara bekliyor</div>';
+      x.kayit.forEach(function(r){
+        gosterilen++;
+        var gun = Math.floor((new Date().getTime()-r.tarih)/86400000);
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border)">';
+        html += '<div style="min-width:46px;text-align:center;font-size:20px;font-weight:800">'+sayEsc(r.beden)+'</div>';
+        html += '<div style="flex:1;min-width:0;font-size:13px;font-weight:700">'+(r.ayak==='SAG'?'👉 SAĞ var':'👈 SOL var')+' → <span style="color:#dc2626">'+tekAyakAd(tekDiger(r.ayak))+' aranıyor</span><div style="font-size:11px;color:var(--muted);font-weight:400">'+(gun>0 ? gun+' gundur' : 'bugun')+' · '+sayEsc(r.ean)+'</div></div>';
+        html += '<button class="say-btn" style="flex:0 0 auto;padding:8px 10px" onclick="tekEsle(\''+r.id+'\')">✅</button><button class="say-btn" style="flex:0 0 44px;padding:8px 0" onclick="tekSil(\''+r.id+'\')">🗑</button></div>';
+      });
+      html += '</div>';
+    });
+  });
+  return html;
+}
 function tekRender(){
   var el = document.getElementById('tek-liste'); if(!el) return;
   var tum = tekListe();
@@ -1504,6 +1551,7 @@ function tekRender(){
   setTxt('tek-sayi', liste.length+' kayit'+(liste.length>150?' (ilk 150 gosteriliyor)':''));
   var html = '';
   if(TEK_GORUN==='k'){ el.innerHTML=''; return; }
+  if(TEK_FILTRE==='B' && liste.length){ el.innerHTML = tekGrupluHtml(liste); return; }
   liste.slice(0,150).forEach(function(r){
     var tr = new Date(r.tarih).toLocaleDateString('tr-TR');
     var renk = r.durum==='ESLESTI' ? '#22c55e' : '#f59e0b';
